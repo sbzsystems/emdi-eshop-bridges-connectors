@@ -135,7 +135,7 @@ where
 
 
 										
-echo "CUSTOMER ID;FIRST NAME;LAST NAME;ADDRESS;ZIP;COUNTRY;CITY/STATE;AREA;PHONE;MOBILE;EMAIL;VAT;TAX OFFICE;COMPANY;OCCUPATION;LANGUAGE;PO BOX;<br>\n";
+echo "йыдийос;омола;епихето;диеухумсг;тй;выяа;покг/молос;пеяиовг;тгкежымо;йимгто;EMAIL;ажл;доу;епымулиа;епаццекла;цкысса;тх;<br>\n";
 		
 while($alldata = mysql_fetch_array( $data ))
 {
@@ -189,7 +189,7 @@ where customer_id=".$one_time_cust_id."
 
 
 										
-echo "CUSTOMER ID;FIRST NAME;LAST NAME;ADDRESS;ZIP;COUNTRY;CITY/STATE;AREA;PHONE;MOBILE;EMAIL;VAT;TAX OFFICE;COMPANY;OCCUPATION;LANGUAGE;PO BOX;<br>\n";
+echo "йыдийос;омола;епихето;диеухумсг;тй;выяа;покг/молос;пеяиовг;тгкежымо;йимгто;EMAIL;ажл;доу;епымулиа;епаццекла;цкысса;тх;<br>\n";
 		
 while($alldata = mysql_fetch_array( $data ))
 {
@@ -303,7 +303,7 @@ group by product_code
 
 //date('Y-m-d H:i:s', $lastdate)
 
-echo "PRODUCT ID;DESCRIPTION1;DESCRIPTION2;TAX;PRICE;PURCHASE PRICE;AVAILABILITY;MEASUREMENT UNIT;CATEGORY;PHOTO;URL;;WEIGHT;<br>\n";
+echo "йыдийос;пеяицяажг1;пеяицяажг2;жпа;тилг1;тилг2;диахесилотгта;ломада;йатгцояиа<br>\n";
 		
 while($alldata = mysql_fetch_array( $data ))
 {
@@ -376,8 +376,7 @@ group by order_id
 //(select ordt.text from ".$dbprefix."order_total as ordt where ordt.order_id =ord.order_id  
 //and ordt.code='shipping' limit 0,1) as shipping
 
-echo "ORDER ID;CUSTOMER ID;SHIPPING COST;PAYMENT COST;DISCOUNT;DATE;NOTE;USER;VOUCHER;<br>\n";
-        
+echo "йыдийос паяаццекиас;йыдийос пекатг;йостос летажояийым;йостос амтийатабокгс;ейптысг;глеяолгмиа;свокио;<br>\n";
 		
 while($alldata = mysql_fetch_array( $data ))
 {
@@ -449,8 +448,7 @@ FROM ".$dbprefix."CubeCart_order_inv as ord
 where ord.cart_order_id='".$orderid."'") or die(mysql_error()); 
 
 
-echo "PRODUCT ID;DESCRIPTION 1;DESCRIPTION 2;DESCRIPTION 3;QUANTITY;MEASUREMENT UNIT;PRICE;TAX;DISCOUNT;START DATE;END DATE;POSITION;ORDER ID;<br>\n";
-
+echo "йыдийос;пеяицяажг1;пеяицяажг2;пеяицяажг3;посотгта;ломада;тилг;жпа;ейптысг;<br>\n";
 		
 while($alldata = mysql_fetch_array( $data ))
 {
