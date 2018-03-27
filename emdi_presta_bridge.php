@@ -1,9 +1,9 @@
 <?php
 /*------------------------------------------------------------------------
-		# EMDI - PRESTA 2 BRIDGE by SBZ systems - Solon Zenetzis - version 1.0
+		# EMDI - PRESTA 2 BRIDGE by SBZ systems - Solon Zenetzis - version 1.2
 		# ------------------------------------------------------------------------
 		# author    SBZ systems - Solon Zenetzis
-		# copyright Copyright (C) 2016 sbzsystems.com. All Rights Reserved.
+		# copyright Copyright (C) 2018 sbzsystems.com. All Rights Reserved.
 		# @license - http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL
 		# Websites: http://www.sbzsystems.com
 		# Technical Support:  Forum - http://www.sbzsystems.com
