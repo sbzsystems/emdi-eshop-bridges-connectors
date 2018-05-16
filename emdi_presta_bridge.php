@@ -1,64 +1,33 @@
 <?php
 /*------------------------------------------------------------------------
-		# EMDI - PRESTA 2 BRIDGE by SBZ systems - Solon Zenetzis - version 1.0
+		# EMDI - PRESTA 1.6 BRIDGE by SBZ systems - Solon Zenetzis - version 1.0
 		# ------------------------------------------------------------------------
 		# author    SBZ systems - Solon Zenetzis
-		# copyright Copyright (C) 2016 sbzsystems.com. All Rights Reserved.
+		# copyright Copyright (C) 2018 sbzsystems.com. All Rights Reserved.
 		# @license - http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL
 		# Websites: http://www.sbzsystems.com
 		# Technical Support:  Forum - http://www.sbzsystems.com
 	-------------------------------------------------------------------------*/
-
-
-/*
-Change validation of upc
-edit /classes/Validate.php
-
-Find function:
-
-public static function isUpc($upc)
-{
-return !$upc || preg_match('/^[0-9]{0,12}$/', $upc);
-}
-and change to 
-public static function isUpc($upc)
-{
-return $upc;
-}
-*/
-
-
-
-
 
 header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 header('Content-Type: text/html; charset=UTF-8');
 
 require 'config/settings.inc.php';
 require 'config/defines.inc.php';
-include_once('config/config.inc.php');
-
-
 
 
 
 $logfile = 'emdibridge.txt';
-$adminfolder='myadmin';
-$reference_field='reference';
-$upc_field='season_code';
-$tokenProducts = '3daa381c9d9438302a20eaa8153e6b37';   //    admin/index.php?controller=AdminProducts&id_product=2&updateproduct&token=xxxxxxxxxxxxxxxxxxxxxxxxxxxx
-$tokenCustomers = 'e56e5f3de293a9df35a7526e6227a3e5';   //    admin/index.php?controller=AdminCustomers&id_customer=39&viewcustomer&token=xxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
 $offset= '';
 $host = _DB_SERVER_;
 $user = _DB_USER_;
 $password = _DB_PASSWD_;
 $db = _DB_NAME_;
 $dbprefix = _DB_PREFIX_;
-$product_code_prefix='P';
+$product_code_prefix='';
 $customer_code_prefix='IC';
 $onetime_customer_code_prefix='AC';
-$lang_code='el';
+$lang_code='el-gr';
 $decimal_point=',';
 $lang_id=2;
 $store_id=1;
@@ -68,14 +37,14 @@ $passkey='';
 $relatedchar='^';
 $addonid='PRO';
 $barcode_field='barcode';
-$auto_product_id=1; //1 If you want the product id produced by ids
+$auto_product_id=0; //1 If you want the product id produced by ids
 
 $key=$_REQUEST['key'];
 
 if (!($key==$passkey)) { header("HTTP/1.0 404 Not Found"); exit(); }
 
 //////////////
-$measurement='ΤΕΜΑΧΙΑ';
+$measurement='ΤΕΜ';
 $measurementaddon='ΠΡΟΣΘΕΤΑ';
 
 //$vat_field='ΑΦΜ';
@@ -85,6 +54,20 @@ $maintax=24;
 $link=mysqli_connect("$host", $user, $password) or die(mysqli_error($link));
 mysqli_select_db($link,"$db") or die(mysqli_error($link));
 mysqli_set_charset('utf8',$link);
+
+
+
+
+
+//// GET PRODUCT ID 
+//$query = "SET NAMES 'utf-8'";
+//mysqli_query($link,$query);  
+
+
+$query = "SET character_set_results = 'utf8', character_set_client = 'utf8', character_set_connection = 'utf8', character_set_database = 'utf8', character_set_server = 'utf8'";
+mysqli_query($link,$query);  
+
+
 
 $photourl= 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . "{$_SERVER['HTTP_HOST']}".'/img/p/';
 $produrl='http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . "{$_SERVER['HTTP_HOST']}".'/index.php?controller=product&id_product=';
@@ -157,8 +140,7 @@ if ($action == 'customers') {
 	//echo date('Y-m-d H:i:s', $lastdate);
 	
 	/////////////
-	
-	$query="SELECT
+	$data = mysqli_query($link, "SELECT
 		addr.firstname,addr.lastname,cust.email,addr.company,
 		addr.address1,addr.address2,addr.postcode,addr.city,addr.phone,addr.phone_mobile,
 		addr.vat_number,addr.id_address,
@@ -175,13 +157,7 @@ if ($action == 'customers') {
 		and (cust.date_add>'".date('Y-m-d H:i:s', $lastdate)."' or cust.date_upd>'".date('Y-m-d H:i:s', $lastdate)."')
 		
 		
-		group by addr.id_address";
-	
-	
-	//echo $query;
-	
-	
-	$data = mysqli_query($link, $query) or die(mysqli_error($link));
+		group by addr.id_address") or die(mysqli_error($link));
 	/////////////
 	
 	
@@ -190,9 +166,6 @@ if ($action == 'customers') {
 	
 	while($alldata = mysqli_fetch_array( $data ))
 	{
-		
-		//echo 'ok';
-		
 		$id=$alldata['id_address'];
 		$firstname= $alldata['firstname'];
 		$lastname=$alldata['lastname'];
@@ -211,14 +184,11 @@ if ($action == 'customers') {
 		$epaggelma='';
 		//$doy=$alldata['doy'];
 		//		$postcode=$alldata['date_added'];
-		$language='';
 		
-		echo $customer_code_prefix.$id.';'.$firstname.';'.$lastname.';'.$address1.';'.$postcode.';'.
-		$country.';'.$state.';'.$city.';'.$phonenumber.';'.$mobile.';'.$email.';'.$afm.';'.$doy.';'.
-		$companyname.';'.$epaggelma.';'.$language.';'.$tu.";<br>\n";
+		echo $customer_code_prefix.$id.';'.$firstname.';'.$lastname.';'.$address1.';'.$postcode.';'.$country.';'.$state.';'.$city.';'
+		.$phonenumber.';'.$mobile.';'.$email.';'.$afm.';'.$doy
+		.';'.$companyname.';'.$epaggelma.';'.$language.';'.$tu.";<br>\n";
 	}
-	
-	
 	
 	
 }
@@ -278,14 +248,10 @@ if ($action == 'products') {
 		
 		SELECT
 		
-		prd.reference,
-		prd.upc,
-		
-		/*GET ATTRIBUTE REFERENCE*/
-		(select patt.reference from ".$dbprefix."product_attribute patt where patt.id_product_attribute=pas.id_product_attribute limit 1) reference2,
+		prd.reference,	
 		
 		/*GET ATTRIBUTE BARCODE*/
-		(select patt.ean13 from ".$dbprefix."product_attribute patt where patt.id_product_attribute=pas.id_product_attribute limit 1) ean132,
+		(select patt.reference from ps_product_attribute patt where patt.id_product_attribute=pas.id_product_attribute limit 1) reference2,
 		
 		
 		(select prl.name from ".$dbprefix."product_lang as prl where prl.id_product=prd.id_product and prl.id_lang=$lang_id) as name,pas.id_product_attribute,
@@ -299,7 +265,7 @@ if ($action == 'products') {
 		and pac.id_attribute=attl.id_attribute
 		AND pac.id_product_attribute=pas.id_product_attribute
 		order by attl.id_attribute
-		limit 1)  as dtname,
+		)  as dtname,
 		
 		
 		/*CUSTOM FIELDS*/
@@ -317,18 +283,23 @@ if ($action == 'products') {
 		and pac.id_attribute=attl.id_attribute
 		AND pac.id_product_attribute=pas.id_product_attribute
 		order by attl.id_attribute
-		limit 1)  as attname,
+		)  as attname,
 		
 		
 		
 		
 		/*REDUCTION PRICE*/
-		(select reduction from ".$dbprefix."specific_price spp where 
+		(select reduction from ps_specific_price spp where 
 		spp.id_product=prd.id_product limit 1) reductionp, 
 		/*REDUCTION PRICE*/
-		(select reduction from ".$dbprefix."specific_price spp where 
-		spp.id_product_attribute=pas.id_product_attribute limit 1) reductiona, 
-		
+		(select reduction from ps_specific_price spp where 
+		spp.id_product_attribute=pas.id_product_attribute limit 1) reductiona,
+		/*REDUCTION PRICE*/
+		(select price from ps_specific_price spp where 
+		spp.id_product=prd.id_product limit 1) reductionc, 		
+		/*reduction_type*/
+		(select reduction_type from ps_specific_price spp where 
+		spp.id_product=prd.id_product limit 1) reductiont, 		
 		
 		
 		
@@ -347,10 +318,10 @@ if ($action == 'products') {
 		
 		(select rate from ".$dbprefix."tax_rule  psr,".$dbprefix."tax  pst
 		where psr.id_tax=pst.id_tax and id_tax_rules_group=prd.id_tax_rules_group
-		group by pst.id_tax limit 1) as ptax,
+		group by pst.id_tax) as ptax,
 		
 		(SELECT clng.name FROM ".$dbprefix."category_lang clng
-		where clng.id_category=id_category_default and clng.id_lang=$lang_id limit 1) as pcat,
+		where clng.id_category=id_category_default and clng.id_lang=$lang_id) as pcat,
 		
 		
 		
@@ -363,16 +334,17 @@ if ($action == 'products') {
 		
 		
 		
-		FROM  ".$dbprefix."product as prd,".$dbprefix."product_attribute_shop as pas
+		FROM  ".$dbprefix."product as prd
 		
+		left join ".$dbprefix."product_attribute_shop as pas on pas.id_product=prd.id_product
 		
 		
 		where prd.active=1
 		
-		and pas.id_product=prd.id_product
 		
+		and
 		
-		and (prd.date_add>'".date('Y-m-d H:i:s', $lastdate)."' or prd.date_upd>'".date('Y-m-d H:i:s', $lastdate)."')
+		(prd.date_add>'".date('Y-m-d H:i:s', $lastdate)."' or prd.date_upd>'".date('Y-m-d H:i:s', $lastdate)."')
 		
 		
 		
@@ -397,26 +369,24 @@ if ($action == 'products') {
 	
 	
 	
-	
 	while($alldata = mysqli_fetch_array( $data ))
 	{
-		
-		
 		$id=$alldata['id_product'];
 		$name= $alldata['name'].' '.$alldata['dtname'];
 		$taxrate= $alldata['ptax'];
 		$price=$alldata['price'];
 		$reductionp=$alldata['reductionp'];
 		$reductiona=$alldata['reductiona'];
+		$reductionc=$alldata['reductionc'];
+		$reductiont=$alldata['reductiont'];
 		$wholesale_price=$alldata['wholesale_price'];
-		
+		$custom=$barcode_field.':'.$alldata['ean13'].'\n'.str_replace('|','\n',$alldata['attname']).'\n';
 		$quantity=$alldata['tquantity'];
 		$category= $alldata['pcat'];
 		$id_category_default= $alldata['id_category_default'];
 		$id_product_attribute= $alldata['id_product_attribute'];
-		$reference2= $alldata['reference2'];
-		$reference= $alldata['reference'];
-		$upc= $alldata['upc'];
+		$mainreference= $alldata['reference'];
+		$reference= $alldata['reference2'];
 		
 		
 		
@@ -427,15 +397,25 @@ if ($action == 'products') {
 		
 		
 		$price=$price+(($price*$taxrate)/100);
+		$price2=0;
 		
+		
+		
+		if (($reductionc) && ($reductiont=='amount')) {
+			$reductionc=$reductionc+(($reductionc*$taxrate)/100);
+			//$reductionp=$price*$reductionp;
+			$price2=$reductionc;
+		} else
 		if ($reductiona) {
-			//$reduction=$reduction+(($reduction*$taxrate)/100);
-			$price=$price-$reductiona;
+			//$reductiona=$reductiona+(($reductiona*$taxrate)/100);
+			$reductiona=$price*$reductiona;
+			$price2=$price-$reductiona;
 		} else
 		if ($reductionp) {
-			//$reduction=$reduction+(($reduction*$taxrate)/100);
-			$price=$price-$reductionp;
-		}
+			//$reductionp=$reductionp+(($reductionp*$taxrate)/100);
+			$reductionp=$price*$reductionp;
+			$price2=$price-$reductionp;
+		} 
 		
 		
 		
@@ -446,6 +426,11 @@ if ($action == 'products') {
 		$price=str_replace('.',$decimal_point,$price);
 		$taxrate=str_replace('.',$decimal_point,$taxrate);
 		$wholesale_price=str_replace('.',$decimal_point,$wholesale_price);
+		
+		
+		
+		
+		
 		
 		
 		
@@ -467,25 +452,16 @@ if ($action == 'products') {
 		
 		if ($id_product_attribute) {
 			$id_product_attribute='.'.$id_product_attribute;
-			$custom=$barcode_field.':'.$alldata['ean132'].'\n'.str_replace('|','\n',$alldata['attname']).'\n';
-		} else {
-			$custom=$barcode_field.':'.$alldata['ean13'].'\n'.str_replace('|','\n',$alldata['attname']).'\n';
 		}
-		
-		if ($upc) {
-			$custom=$custom.$upc_field.':'.$upc.'\n';
-		}
-		if ($reference) {
-			$custom=$custom.$reference_field.':'.$reference.'\n';
-		}
-		
 		
 		if ($auto_product_id) {
-			$reference2=$product_code_prefix.$id.$id_product_attribute;				
+			$reference=$product_code_prefix.$id.$id_product_attribute;				
 		} 
 		
 		
-		echo $reference2.';'.$name.';'.$custom.';'.$taxrate.';'.$price.';'.$wholesale_price.';'.$quantity.';'.
+		if (!$reference) { $reference=$mainreference; }
+		
+		echo $reference.';'.$name.';'.$custom.';'.$taxrate.';|11:'.$price.'|12:'.$price2.';;'.$quantity.';'.
 		$measurement.";".$category.";".
 		$photourl.$imgfolder.'/'.$imageid.'-thickbox_default.jpg'.
 		";".$produrl.$id.";".$id_category_default.";<br>\n";
@@ -549,7 +525,7 @@ if ($action == 'orders') {
 		ord.total_discounts as discount,
 		ord.total_wrapping as delcost,
 		ord.payment,
-		(SELECT msg.message FROM ".$dbprefix."message msg where msg.id_order=ord.id_order limit 1) message
+		(SELECT msg.message FROM ps_message msg where msg.id_order=ord.id_order limit 1) message
 		
 		FROM ".$dbprefix."orders as ord
 		
@@ -619,7 +595,7 @@ if ($action == 'order') {
 		
 		
 		/*GET ATTRIBUTE BARCODE
-		(select patt.reference from ".$dbprefix."product_attribute patt where patt.id_product_attribute=ord.product_attribute_id limit 1) reference2,
+		(select patt.reference from ps_product_attribute patt where patt.id_product_attribute=ord.product_attribute_id limit 1) reference2,
 		*/
 		
 		ord.id_order as order_id,
@@ -734,6 +710,14 @@ if ($action == 'confirmorder') {
 
 
 
+
+
+
+
+
+
+
+
 if ($action == 'updatestock') {
 	
 	
@@ -742,13 +726,85 @@ if ($action == 'updatestock') {
 	
 	$query="update ".$dbprefix."product_attribute set quantity=".$stock." where ";
 	
+	
 	if ($auto_product_id) {		
 		$query=$query." concat(id_product,'.',id_product_attribute)='".substr($productid,strlen($product_code_prefix))."'";
 	} else {
 		$query=$query." reference='".substr($productid,strlen($product_code_prefix))."'";			
 	}
-	//	echo $query;
 	
+	
+	//echo $query;
+	
+	
+	
+	
+	$data = mysqli_query($link,$query) or die(mysqli_error($link));
+	
+	
+	
+	
+	//GET ID BY REFERENCE
+	$id_product='';
+	$query="select id_product from ".$dbprefix."product_attribute where reference='".substr($productid,strlen($product_code_prefix))."'";
+	//echo $query;
+	$data = mysqli_query($link,$query) or die(mysqli_error($link));
+	while($alldata = mysqli_fetch_array( $data ))
+	{
+		$id_product=$alldata['id_product'];
+	}
+	
+	
+	
+	//IF NO ATTRIBUTE FIND PRODUCT'S ID
+	if (!$id_product) {
+		
+		
+		
+		//GET ID BY REFERENCE
+		$id_product='';
+		$query="select id_product from ".$dbprefix."product where reference='".substr($productid,strlen($product_code_prefix))."'";
+		//echo $query;
+		$data = mysqli_query($link,$query) or die(mysqli_error($link));
+		while($alldata = mysqli_fetch_array( $data ))
+		{
+			$id_product=$alldata['id_product'];
+		}
+		
+		
+		
+		$qty=$stock;
+		
+	} ELSE {
+		
+		
+		
+		
+		
+		
+		
+		// UPDATE ATTRIBUTES
+		$query="update ".$dbprefix."stock_available set quantity=".$stock." where ";	
+		$query=$query.	"id_product_attribute=(select pra.id_product_attribute from ".$dbprefix."product_attribute pra where reference='".substr($productid,strlen($product_code_prefix))."')";		
+		$query=$query."and id_product=".$id_product;	
+		//echo $query;	
+		$data = mysqli_query($link,$query) or die(mysqli_error($link));
+		
+		
+		
+		
+		//GET TOTAL
+		$query="SELECT sum(quantity) qty FROM ".$dbprefix."stock_available where id_product=".$id_product." and id_product_attribute<>0";	
+		//	echo $query;	
+		$data = mysqli_query($link,$query) or die(mysqli_error($link));
+		while($alldata = mysqli_fetch_array( $data ))
+		{
+			$qty=$alldata['qty'];
+		}
+	}
+	//UPDATE TOTAL
+	$query="update ".$dbprefix."stock_available set quantity=".$qty." where id_product=".$id_product." and id_product_attribute=0";	
+	//	echo $query;	
 	$data = mysqli_query($link,$query) or die(mysqli_error($link));
 	
 	
@@ -757,8 +813,11 @@ if ($action == 'updatestock') {
 	
 	
 	
-	//SET TOTAL QUANTITY
-	//$data = mysqli_query($link, "update ".$dbprefix."product set quantity=".$totalqua."  where product_id=".$productmain_id) or die(mysqli_error($link));
+	
+	//SET TOTAL QUANTITY NO ATTRIBUTES
+	$query="update ".$dbprefix."product set quantity=".$stock." where reference='".substr($productid,strlen($product_code_prefix))."'";
+	echo $query;
+	$data = mysqli_query($link, $query) or die(mysqli_error($link));
 	
 	
 	
@@ -807,58 +866,31 @@ if ($action == 'redirect') {
 	
 	// EDIT PRODUCT
 	if ($productid) {
+		$data = mysqli_query($link, "
+			SELECT * FROM ".$dbprefix."product WHERE model = '".$productid."'
+			") or die(mysqli_error($link));
 		
+		//echo mysqli_num_rows($data);
 		
-		$query="select * from ".$dbprefix."product_attribute where ";
-		
-		if ($auto_product_id) {		
-			$query=$query." concat(id_product,'.',id_product_attribute)='".substr($productid,strlen($product_code_prefix))."'";
-		} else {
-			$query=$query." reference='".substr($productid,strlen($product_code_prefix))."'";			
+		if (mysqli_num_rows($data)<>0) {
+			//GET PRODCUT ID
+			while($alldata = mysqli_fetch_array( $data ))
+			{
+				$id=$alldata['product_id'];
+				break;
+			}
+			
+			session_start();
+			header('Location: '."admin/index.php?route=catalog/product/update&token=".$_SESSION['token']."&product_id=".$id);
 		}
-		//	echo $query;		
-		$data = mysqli_query($link,$query) or die(mysqli_error($link));
-		
-		
-		$productmain_id='';
-		
-		//if (mysqli_num_rows($data)<>0) {
-		while($alldata = mysqli_fetch_array( $data ))
-		{
-			$productmain_id = $alldata['id_product'];
-		}
-		
-		
-		
-		//$tokenProducts =  Tools::getAdminTokenLite('AdminProducts');
-		
-		header('Location: '.$adminfolder."/index.php?controller=AdminProducts&id_product=".$productmain_id."&updateproduct&token=".$tokenProducts);
-		
-		
-		
-		//}
 	}
 	
 	// EDIT CUSTOMER
 	if ($customerid) {
 		//customer_code_prefix
 		$customerid=str_replace($customer_code_prefix,'', $customerid);
-		
-		$customermain_id = '';
-		$query="select id_customer from ".$dbprefix."address where id_address=".$customerid;
-		$data = mysqli_query($link,$query) or die(mysqli_error($link));
-		
-		while($alldata = mysqli_fetch_array( $data ))
-		{
-			$customermain_id = $alldata['id_customer'];
-			break;
-		}
-		
-		
-		
-		
-		
-		header('Location: '.$adminfolder."/index.php?controller=AdminCustomers&id_customer=".$customermain_id."&viewcustomer&token=".$tokenCustomers);
+		session_start();
+		header('Location: '."admin/index.php?route=sale/customer/update&token=".$_SESSION['token']."&customer_id=".$customerid);
 		
 	}
 	
