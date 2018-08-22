@@ -1,6 +1,6 @@
 <?php
 /*------------------------------------------------------------------------
-		# EMDI - PRESTA 2 BRIDGE by SBZ systems - Solon Zenetzis - version 1.1
+		# EMDI - PRESTA 1.7 BRIDGE by SBZ systems - Solon Zenetzis - version 1.1
 		# ------------------------------------------------------------------------
 		# author    SBZ systems - Solon Zenetzis
 		# copyright Copyright (C) 2016 sbzsystems.com. All Rights Reserved.
