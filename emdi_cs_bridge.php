@@ -447,8 +447,7 @@ group by ".$dbprefix."product_options_inventory.product_code
 //and prds.lang_code='".$lang_code."'
 //echo $query;
 
-$data = mysqli_query($link,$query) or die(mysqli_error($link)); 
-echo "ΚΩΔΙΚΟΣ;ΠΕΡΙΓΡΑΦΗ1;ΠΕΡΙΓΡΑΦΗ2;ΦΠΑ;ΤΙΜΗ1;ΤΙΜΗ2;ΔΙΑΘΕΣΙΜΟΤΗΤΑ;ΜΟΝΑΔΑ;ΚΑΤΗΓΟΡΙΑ<br>\n";
+$data = mysqli_query($link,$query) or die(mysqli_error($link));
 		
 while($alldata = mysqli_fetch_array( $data ))
 {
