@@ -287,25 +287,139 @@ if (file_exists($file)) {
 ////PRODUCTS
 
 
-$data = mysql_query("
+$data = mysqli_query($link,"
 SELECT  ".$dbprefix."products.product_id,
-".$dbprefix."product_descriptions.product, ".$dbprefix."product_options_inventory.product_code,
+".$dbprefix."product_descriptions.product, ".$dbprefix."products.product_code,
 ".$dbprefix."tax_rates.rate_value,
 ".$dbprefix."product_prices.price,
 ".$dbprefix."category_descriptions.category,
 ".$dbprefix."products.amount,
-".$dbprefix."products.updated_timestamp
+".$dbprefix."products.timestamp
+FROM 
+".$dbprefix."products
+
+left join ".$dbprefix."product_descriptions
+on  ".$dbprefix."product_descriptions.product_id=".$dbprefix."products.product_id and ".$dbprefix."product_descriptions.lang_code='".$lang_code."'
+
+left join ".$dbprefix."products_categories
+on  ".$dbprefix."products_categories.product_id=".$dbprefix."products.product_id
+
+left join ".$dbprefix."product_prices
+on  ".$dbprefix."product_prices.product_id=".$dbprefix."products.product_id and lower_limit=1
+
+left join ".$dbprefix."category_descriptions
+on  ".$dbprefix."category_descriptions.category_id=".$dbprefix."products_categories.category_id and ".$dbprefix."category_descriptions.lang_code='".$lang_code."'
+
+left join ".$dbprefix."tax_rates
+on  ".$dbprefix."tax_rates.tax_id=".$dbprefix."products.tax_ids and ".$dbprefix."tax_rates.rate_type='P'
+
+where ".$dbprefix."products.status='A'
+and ".$dbprefix."products.timestamp>".$lastdate."
+
+group by ".$dbprefix."products.product_id
+
+
+") or die(mysqli_error($link)); 
+echo "ΚΩΔΙΚΟΣ;ΠΕΡΙΓΡΑΦΗ1;ΠΕΡΙΓΡΑΦΗ2;ΦΠΑ;ΤΙΜΗ1;ΤΙΜΗ2;ΔΙΑΘΕΣΙΜΟΤΗΤΑ;ΜΟΝΑΔΑ;ΚΑΤΗΓΟΡΙΑ<br>\n";
+		
+while($alldata = mysqli_fetch_array( $data ))
+{
+		$id=trim($alldata['product_code']);  	 	
+		
+		$name1 = $alldata['product'];   
+		$name1 = htmlentities($name1, null, 'utf-8');
+		$name1 = str_replace("&nbsp;", " ", $name1);
+		$name1 = str_replace("&amp;", ',', $name1);
+		
+		
+  	 	//$name2= $alldata['attribute']; 
+  	 	$taxrate=$alldata['rate_value'];
+		//$taxrate=$maintax;
+		//$monada= $alldata['product_unit']; 
+
+		//$paytype=substr($alldata['paytype'],0,1);
+		//$type=substr($alldata['keym'],0,1);
+		//$servertype=$alldata['servertype'];  	
+	    $taxrate=number_format($taxrate, 2, ',', '');	
+		$price=$alldata['price'];
+	    $price=number_format($price, 2, ',', '');
+		
+		$category= $alldata['category']; 
+		$category = htmlentities($category, null, 'utf-8');
+		$category = str_replace("&nbsp;", " ", $category);
+		$category = str_replace("&amp;", ',', $category);
+		
+		
+		
+		
+		if ($measurement_field) {
+		$data2 = mysqli_query($link,"
+			SELECT distinct pfv.product_id, pfvd.variant FROM 
+			".$dbprefix."product_features_values pfv,
+			".$dbprefix."product_features_descriptions pfd,
+			".$dbprefix."product_feature_variant_descriptions pfvd
+
+			where
+			pfd.feature_id=pfv.feature_id and 
+			pfvd.variant_id=pfv.variant_id and
+			pfd.description='".$measurement_field."'
+			and pfv.product_id=".$alldata['product_id']
+
+
+		) or die(mysqli_error($link));						
+		$nmonada=$monada;
+		while($alldata2 = mysqli_fetch_array( $data2 ))
+		{ $nmonada=$alldata2['variant']; }
+		}
+		
+		
+		$row=$product_code_prefix.$id.';'.$name1.';;'.$taxrate.';'.$price.";;;".$nmonada.";".$category.";<br>\n";			 
+		$row=html_entity_decode($row);
+		echo $row;
+		
+
+			
+}
+////
+
+
+
+
+
+
+////PRODUCT OPTIONS
+
+$query="
+SELECT  ".$dbprefix."products.product_id,
+prds.product, ".$dbprefix."product_options_inventory.product_code,
+".$dbprefix."tax_rates.rate_value,
+".$dbprefix."product_prices.price,
+".$dbprefix."category_descriptions.category,
+".$dbprefix."products.amount,
+".$dbprefix."products.updated_timestamp,
+povdscr.variant_name
 
 FROM 
 ".$dbprefix."product_options_inventory
 
 
+
 left join ".$dbprefix."products
-on  ".$dbprefix."product_options_inventory.product_id=".$dbprefix."products.product_id and ".$dbprefix."product_descriptions.lang_code='".$lang_code."'
+on  ".$dbprefix."product_options_inventory.product_id=".$dbprefix."products.product_id
+
+left join ".$dbprefix."product_descriptions prds
+on  prds.product_id=".$dbprefix."products.product_id
 
 
-left join ".$dbprefix."product_descriptions
-on  ".$dbprefix."product_descriptions.product_id=".$dbprefix."products.product_id
+
+
+
+
+left join ".$dbprefix."product_option_variants_descriptions povdscr
+on  povdscr.variant_id=".$dbprefix."products.product_id
+
+
+
 
 left join ".$dbprefix."products_categories
 on  ".$dbprefix."products_categories.product_id=".$dbprefix."products.product_id
@@ -319,6 +433,7 @@ on  ".$dbprefix."category_descriptions.category_id=".$dbprefix."products_categor
 left join ".$dbprefix."tax_rates
 on  ".$dbprefix."tax_rates.tax_id=".$dbprefix."products.tax_ids and ".$dbprefix."tax_rates.rate_type='P'
 
+
 where ".$dbprefix."products.status='A'
 ".$coid."
 and ".$dbprefix."products.updated_timestamp>".$lastdate."
@@ -327,14 +442,19 @@ and ".$dbprefix."products.updated_timestamp>".$lastdate."
 group by ".$dbprefix."product_options_inventory.product_code
 
 
-") or die(mysql_error()); 
+";
+
+//and prds.lang_code='".$lang_code."'
+//echo $query;
+
+$data = mysqli_query($link,$query) or die(mysqli_error($link)); 
 echo "ΚΩΔΙΚΟΣ;ΠΕΡΙΓΡΑΦΗ1;ΠΕΡΙΓΡΑΦΗ2;ΦΠΑ;ΤΙΜΗ1;ΤΙΜΗ2;ΔΙΑΘΕΣΙΜΟΤΗΤΑ;ΜΟΝΑΔΑ;ΚΑΤΗΓΟΡΙΑ<br>\n";
 		
-while($alldata = mysql_fetch_array( $data ))
+while($alldata = mysqli_fetch_array( $data ))
 {
-		$id=$alldata['product_code'];  	 	
+		$id=trim($alldata['product_code']);  	 	
   	 	$name1= $alldata['product']; 
-  	 	//$name2= $alldata['attribute']; 
+  	 	$variant_name= $alldata['variant_name']; 
   	 	$taxrate=$alldata['rate_value'];
 		//$monada= $alldata['product_unit']; 
 
@@ -350,25 +470,31 @@ while($alldata = mysql_fetch_array( $data ))
 		
 		//////////monada metrhshs///////////////	
 		if ($measurement_field) {
-		$data2 = mysql_query('SELECT * FROM '
-		
-							.$dbprefix.'product_features_values,'
-							.$dbprefix.'product_features_descriptions,'
-							.$dbprefix.'product_feature_variant_descriptions'
-							.' where '
-							.$dbprefix.'product_features_descriptions.feature_id='.$dbprefix.'product_features_values.feature_id'
-							.' and '.$dbprefix.'product_feature_variant_descriptions.variant_id='.$dbprefix.'product_features_values.variant_id'
-							.' and '.$dbprefix.'product_features_values.product_id='.$alldata['product_id']
-							.' and '.$dbprefix."product_features_descriptions.description='".$measurement_field."'"
-		) or die(mysql_error());						
-		$monada='';
-		while($alldata2 = mysql_fetch_array( $data2 ))
-		{ $monada=$alldata2['variant']; }
+		$data2 = mysqli_query($link,"
+			SELECT distinct pfv.product_id, pfvd.variant FROM 
+			".$dbprefix."product_features_values pfv,
+			".$dbprefix."product_features_descriptions pfd,
+			".$dbprefix."product_feature_variant_descriptions pfvd
+
+			where
+			pfd.feature_id=pfv.feature_id and 
+			pfvd.variant_id=pfv.variant_id and
+			pfd.description='".$measurement_field."'
+			and pfv.product_id=".$alldata['product_id']
+
+
+		) or die(mysqli_error($link));						
+		$nmonada=$monada;
+		while($alldata2 = mysqli_fetch_array( $data2 ))
+		{ $nmonada=$alldata2['variant']; }
 		}
+ 
+		
+		
 		
 
         
-		echo $product_code_prefix.$id.';'.$name1.';;'.$taxrate.';'.$price.";;;".$monada.";".$category.";<br>\n";			 
+		echo $product_code_prefix.$id.';'.$name1.' '.$variant_name.';;'.$taxrate.';'.$price.";;;".$monada.";".$category.";<br>\n";			 
 		
 
 			
@@ -380,39 +506,6 @@ while($alldata = mysql_fetch_array( $data ))
 
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 if ($action == 'orders') {
 $data = mysql_query("SELECT * FROM ".$dbprefix."orders where status<>'C' and status<>'D' and status<>'I' and status<>'F' and tax_exempt='N' order by order_id,user_id desc") or die(mysql_error()); //
@@ -667,6 +760,8 @@ if ($action == 'updatestock') {
 //echo "UPDATE ".$dbprefix."products SET amount = ".$stock." WHERE ".$dbprefix."products.product_id =".$productid;
 //echo substr($productid,strlen($product_code_prefix));
 $data = mysql_query("UPDATE ".$dbprefix."products SET amount = ".$stock." WHERE ".$dbprefix."products.product_code ='".substr($productid,strlen($product_code_prefix))."'") or die(mysql_error());
+
+$data = mysqli_query($link,"UPDATE ".$dbprefix."product_options_inventory SET amount = ".$stock." WHERE product_code ='".substr($productid,strlen($product_code_prefix))."'") or die(mysqli_error($link));
 		
 echo $hmera;
 }
