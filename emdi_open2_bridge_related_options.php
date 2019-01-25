@@ -27,7 +27,7 @@ $product_code_prefix='';
 $customer_code_prefix='IC';
 $onetime_customer_code_prefix='AC';
 $lang_code='el-gr';
-$lang_id=2;
+$lang_id=4;
 $store_id=0;
 $tmp_path = DIR_SYSTEM.'tmp';
 $timezone=$config->offset; 
@@ -36,7 +36,6 @@ $relatedchar='^';
 $addonid='PRO';
 $avail_id=7;   // FROM TABLE stock_status AVAILABLE
 $notavail_id=5; // FROM TABLE stock_status NOT AVAILABLE
-
 
 //////////////
 $measurement='ΤΕΜΑΧΙΑ';
@@ -339,7 +338,7 @@ if ($_REQUEST['test']) {
 		
 		
 		
-		(SELECT GROUP_CONCAT(prov.ean) 
+		(SELECT GROUP_CONCAT(prov.model) 
 		FROM ".$dbprefix."relatedoptions prov
 		WHERE prov.product_id=descr.product_id ) as optionssku
 		
@@ -551,6 +550,8 @@ if ($_REQUEST['test']) {
 
 
 
+
+
 if ($action == 'orders') {
 	
 	
@@ -599,6 +600,7 @@ if ($action == 'orders') {
 			
 			
 			FROM ".$dbprefix."order as ord
+			WHERE ord.order_status_id in (1,15)
 			group by ord.order_id
 			
 			") or die(mysqli_error($link)); //
@@ -688,11 +690,40 @@ if ($action == 'order') {
 		SELECT
 		ord.order_id as order_id,
 		ord.name as product,
-		ord.ean as product_code,
+		ord.model as product_code,
 		ord.total as price,
 		ord.quantity as amount,
 		ord.product_id as product_id,
-		round ((ord.tax*100)/ord.total) as rate_value
+		round ((ord.tax*100)/ord.total) as rate_value,
+		
+		
+		
+        (SELECT GROUP_CONCAT(
+        (select opvde.name from ".$dbprefix."option_value_description opvde where opvde.option_value_id=rltop.option_value_id and opvde.language_id=$lang_id)                
+        ) 
+		FROM ".$dbprefix."relatedoptions prov
+		left join ".$dbprefix."relatedoptions_option rltop on rltop.relatedoptions_id=prov.relatedoptions_id		
+		WHERE prov.model=ord.model ) as optionsdescr
+        
+              
+		,
+		
+		
+			
+		
+		
+		 (SELECT GROUP_CONCAT(
+        (select opvde.name from ".$dbprefix."option_description opvde where opvde.option_id=rltop.option_id and opvde.language_id=$lang_id)                
+        ) 
+		FROM ".$dbprefix."relatedoptions prov
+		left join ".$dbprefix."relatedoptions_option rltop on rltop.relatedoptions_id=prov.relatedoptions_id		
+		WHERE prov.model=ord.model ) as optionsnametitle
+        
+		
+		
+		
+		
+		
 		FROM ".$dbprefix."order_product as ord
 		left join ".$dbprefix."product as pro on pro.product_id=ord.product_id
 		
@@ -706,6 +737,11 @@ if ($action == 'order') {
 		$description = $alldata['product']; 
 		$product_id = $alldata['product_code']; 
 		$product_quantity = $alldata['amount']; 
+		
+		$optionsnametitle = $alldata['optionsnametitle']; 
+		$optionsdescr = $alldata['optionsdescr']; 
+		
+		
 		$amount=number_format($alldata['price']/$product_quantity, 2, ',', '');
 		//$discount=number_format($alldata['percentage_discount'], 2, ',', '');	
 		$discount=0;		
@@ -718,7 +754,7 @@ if ($action == 'order') {
 		
 		
 		
-		echo $product_code_prefix.$product_id.';'.$description.';;;'.$product_quantity.';'.$monada.';'.$amount.';'.$taxrate.';'.$discount.";<br>\n";
+		echo $product_code_prefix.$product_id.';'.$description.' '.$optionsnametitle.' '.$optionsdescr.';;;'.$product_quantity.';'.$monada.';'.$amount.';'.$taxrate.';'.$discount.";<br>\n";
 		
 		
 		
@@ -842,7 +878,8 @@ if ($action == 'confirmorder') {
 
 
 
-if ($action == 'updatestock') {
+
+if ($action == 'updatestock') {	
 	$optvalid='';
 	//where concat(pro.model,rel.model)='".substr($productid,strlen($product_code_prefix))."'
 	$data = mysqli_query($link,"
@@ -854,7 +891,7 @@ if ($action == 'updatestock') {
 		
 		from ".$dbprefix."relatedoptions rel
 		left join ".$dbprefix."product pro on pro.product_id=rel.product_id
-		where rel.ean='".substr($productid,strlen($product_code_prefix))."'
+		where rel.model='".substr($productid,strlen($product_code_prefix))."'
 		
 		
 		
@@ -914,7 +951,7 @@ if ($action == 'updatestock') {
 	
 	
 	
- /////////////////////////////////////////update standard options stock
+	 /////////////////////////////////////////update standard options stock
  /////////////////////////////////////////
 	
 	 
@@ -1419,7 +1456,7 @@ if ($action == 'uploadproduct') {
 	
 	
 	
-	 
+	
 	
 	
 	
