@@ -34,6 +34,9 @@ $timezone=$config->offset;
 $passkey='';
 $relatedchar='^';
 $addonid='PRO';
+$avail_id=7;   // FROM TABLE stock_status AVAILABLE
+$notavail_id=5; // FROM TABLE stock_status NOT AVAILABLE
+
 
 //////////////
 $measurement='ΤΕΜΑΧΙΑ';
@@ -97,143 +100,197 @@ if ($action == 'productsok') {
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//CUSTOMERS BY ORDERS
-if ($action == 'customers') {
 	
-	$file = $tmp_path."/customers_".$key; 
-	$lastdate=0;
-	if (file_exists($file)) {
-		$handle = fopen($file, 'r'); 
-		$lastdate = fread($handle, 20); 
-		fclose($handle); 
-	}
-	
-	$query="
+	//CUSTOMERS BY ORDERS
+	if ($action == 'customers') {
 		
-		SELECT 
-		
-		
-		
-		
-		(case when customer_id=0 then concat('$onetime_customer_code_prefix',order_id) else concat('$customer_code_prefix',customer_id) end) as user_id,
-		
-		email,
-		telephone as b_phone,
-		fax as phone,
-		
-		firstname,
-		lastname,
-		payment_company as company,
-		payment_address_1 as b_address,				
-		payment_address_2 as c_address,
-		payment_city as b_city,
-		payment_postcode as b_zipcode,
-		payment_country  as b_country,
-		payment_zone as b_state,
-		shipping_custom_field,
-		custom_field,
-		shipping_firstname as sfirstname,
-		shipping_lastname as slastname,
-		shipping_company as scompany,
-		shipping_address_1 as sb_address,				
-		shipping_address_2 as sc_address,
-		shipping_city as sb_city,
-		shipping_postcode as sb_zipcode,
-		shipping_country  as sb_country,
-		shipping_zone as sb_state,
-		
-		
-		date_added as dd,
-		
-		
-		date_added
-		
-		FROM ".$dbprefix."order
-		where date_added>'". $lastdate."'
-		and email<>''
-		
-		
-		group by 	
-		(case when customer_id=0 then concat('$onetime_customer_code_prefix',order_id) else concat('$customer_code_prefix',customer_id) end) 
-		
-		
-		";
-	
-	/////////////
-	$data = mysqli_query($link,$query) or die(mysqli_error($link));;
-	/////////////
-	
-	
-	
-	echo "CUSTOMER ID;FIRST NAME;LAST NAME;ADDRESS;ZIP;COUNTRY;CITY/STATE;AREA;PHONE;MOBILE;EMAIL;VAT;TAX OFFICE;COMPANY;OCCUPATION;LANGUAGE;PO BOX;<br>\n";
-	
-	while($alldata = mysqli_fetch_array( $data ))
-	{
-		$id=$alldata['user_id'];  	 	
-		
-		
-		if ($alldata['sb_address']) {
-			
-			$firstname= $alldata['sfirstname']; 
-			$lastname=$alldata['slastname'];  	 	
-			$address1=$alldata['sb_address'];  	 	
-			$tu=$alldata['sc_address']; 		
-			$postcode=$alldata['sb_zipcode'];  	 
-			$country=$alldata['sb_country'];  	 	
-			$state=$alldata['sb_state'];  	 	
-			$city=$alldata['sb_city'];  	 	
-			$companyname=$alldata['scompany'];  	 	
-			
-		} else {
-			$firstname= $alldata['firstname']; 
-			$lastname=$alldata['lastname'];  	 	
-			$address1=$alldata['b_address'];  	 	
-			$tu=$alldata['c_address']; 		
-			$postcode=$alldata['b_zipcode'];  	 
-			$country=$alldata['b_country'];  	 	
-			$state=$alldata['b_state'];  	 	
-			$city=$alldata['b_city'];  	 	
-			$companyname=$alldata['company'];  	 	
+		$file = $tmp_path."/customers_".$key; 
+		$lastdate=0;
+		if (file_exists($file)) {
+			$handle = fopen($file, 'r'); 
+			$lastdate = fread($handle, 20); 
+			fclose($handle); 
 		}
 		
 		
-		$phonenumber=$alldata['b_phone'];  	 	
-		$mobile=$alldata['phone'];  	 	
-		$email=$alldata['email'];  	 	
-		$date_added=$alldata['date_added'];  	 	
+	 
+			
+			$query="
+			
+			SELECT 
+			
+			
+			
+			
+			(case when customer_id=0 then concat('$onetime_customer_code_prefix',order_id) else concat('$customer_code_prefix',customer_id) end) as user_id,
+			
+			email,
+			telephone as b_phone,
+			fax as phone,
+			
+			firstname,
+			lastname,
+			payment_company as company,
+			payment_address_1 as b_address,				
+			payment_address_2 as c_address,
+			payment_city as b_city,
+			payment_postcode as b_zipcode,
+			payment_country  as b_country,
+			payment_zone as b_state,
+			shipping_custom_field,
+			custom_field,		
+			shipping_firstname as sfirstname,
+			shipping_lastname as slastname,
+			shipping_company as scompany,
+			shipping_address_1 as sb_address,				
+			shipping_address_2 as sc_address,
+			shipping_city as sb_city,
+			shipping_postcode as sb_zipcode,
+			shipping_country  as sb_country,
+			shipping_zone as sb_state,
+			
+			
+			date_added as dd,
+			
+			
+			date_added
+			
+			FROM ".$dbprefix."order
+			where date_added>'". $lastdate."'
+			and email<>''
+			
+			
+			group by 	
+			(case when customer_id=0 then concat('$onetime_customer_code_prefix',order_id) else concat('$customer_code_prefix',customer_id) end) 
+			
+			
+			";
+			
+			
+	 
 		
-		$custom_field=$alldata['custom_field'];  	 
-		//$cfld=unserialize($custom_field);
-		$cfld=json_decode($custom_field,true);
-		//var_dump(json_decode($cfld, true));
-		
-		$companyname= $cfld['4'];  	 	
-		$afm=$cfld['1'];  	 	
-		$doy=$cfld['2'];  	 	
-		$epaggelma=$cfld['3'];  
+		/////////////
+		$data = mysqli_query($link,$query) or die(mysqli_error($link));;
+		/////////////
 		
 		
 		
+		echo "CUSTOMER ID;FIRST NAME;LAST NAME;ADDRESS;ZIP;COUNTRY;CITY/STATE;AREA;PHONE;MOBILE;EMAIL;VAT;TAX OFFICE;COMPANY;OCCUPATION;LANGUAGE;PO BOX;<br>\n";
 		
-		$rowtext=$id.';'.$firstname.';'.$lastname.';'.$address1.';'.$postcode.';'.';'.$state.';'.$city.';'
-		.$phonenumber.';'.$mobile.';'.$email.';'.$afm.';'.$doy.';'.$companyname.';'.$epaggelma.';'.$language.';'.$tu.";<br>\n";		
+		while($alldata = mysqli_fetch_array( $data ))
+		{
+			$id=$alldata['user_id'];  	 	
+			
+			
+			if ($alldata['sb_address']) {
+				
+				$firstname= $alldata['sfirstname']; 
+				$lastname=$alldata['slastname'];  	 	
+				$address1=$alldata['sb_address'];  	 	
+				$tu=$alldata['sc_address']; 		
+				$postcode=$alldata['sb_zipcode'];  	 
+				$country=$alldata['sb_country'];  	 	
+				$state=$alldata['sb_state'];  	 	
+				$city=$alldata['sb_city'];  	 	
+				$companyname=$alldata['scompany'];  	 	
+				
+				} else {
+				$firstname= $alldata['firstname']; 
+				$lastname=$alldata['lastname'];  	 	
+				$address1=$alldata['b_address'];  	 	
+				$tu=$alldata['c_address']; 		
+				$postcode=$alldata['b_zipcode'];  	 
+				$country=$alldata['b_country'];  	 	
+				$state=$alldata['b_state'];  	 	
+				$city=$alldata['b_city'];  	 	
+				$companyname=$alldata['company'];  	 			$custom_field=$alldata['custom_field'];
+			
+			//$cfld=unserialize($custom_field);
+			$cfld=json_decode($custom_field,true);
+			//var_dump(json_decode($cfld, true));
+			$companyname= $cfld['4'];
+			$afm=$cfld['2'];
+			$doy=$cfld['3'];
+			$epaggelma=$cfld['0']; 
+			
+			}
+			
+			
+			$phonenumber=$alldata['b_phone'];  	 	
+			$mobile=$alldata['phone'];  	 	
+			$email=$alldata['email'];  	 	
+			$date_added=$alldata['date_added'];  	 	
+	
+			
+			
+			
+			$rowtext=$id.';'.$firstname.';'.$lastname.';'.$address1.';'.$postcode.';'.';'.$state.';'.$city.';'
+			.$phonenumber.';'.$mobile.';'.$email.';'.$afm.';'.$doy.';'.$companyname.';'.$epaggelma.';'.$language.';'.$tu.";<br>\n";		
+			
+			$rowtext=str_ireplace("&amp;","&",$rowtext);
+			$rowtext=str_ireplace("&quot;","'",$rowtext);
+			$rowtext=str_ireplace("&#039;","'",$rowtext);
+			$rowtext=str_ireplace("'","`",$rowtext);
+			echo $rowtext;	
+			
+			
+			
+			
+			// NEW CUSTOMER FOR PAYMENT
+			//if ($_REQUEST['test']=='1') {
+				
+				// NEW CUSTOMER FOR PAYMENT
+				if (($alldata['sb_address']) 
+				&& (
+				($lastname<>$alldata['lastname'])
+				|| ($address1<>$alldata['b_address'])
+				|| ($tu<>$alldata['c_address'])
+				|| ($postcode<>$alldata['b_zipcode'])
+				|| ($country<>$alldata['b_country'])
+				|| ($state<>$alldata['b_state'])
+				|| ($city<>$alldata['b_city'])
+				//|| ($companyname<>$alldata['company'])				
+				))
+				{
+					
+					$firstname= $alldata['firstname']; 
+					$lastname=$alldata['lastname'];  	 	
+					$address1=$alldata['b_address'];  	 	
+					$tu=$alldata['c_address']; 		
+					$postcode=$alldata['b_zipcode'];  	 
+					$country=$alldata['b_country'];  	 	
+					$state=$alldata['b_state'];  	 	
+					$city=$alldata['b_city'];  	 	
+					$companyname=$alldata['company'];  	
+					$custom_field=$alldata['custom_field'];
+			
+			//$cfld=unserialize($custom_field);
+			$cfld=json_decode($custom_field,true);
+			//var_dump(json_decode($cfld, true));
+			$companyname= $cfld['4'];
+			$afm=$cfld['2'];
+			$doy=$cfld['3'];
+			$epaggelma=$cfld['0']; 
+					
+					$rowtext=$id.'.P;'.$firstname.';'.$lastname.';'.$address1.';'.$postcode.';'.';'.$state.';'.$city.';'
+					.$phonenumber.';'.$mobile.';'.$email.';'.$afm.';'.$doy.';'.$companyname.';'.$epaggelma.';'.$language.';'.$tu.";<br>\n";		
+					
+					$rowtext=str_ireplace("&amp;","&",$rowtext);
+					$rowtext=str_ireplace("&quot;","'",$rowtext);
+					$rowtext=str_ireplace("&#039;","'",$rowtext);
+					$rowtext=str_ireplace("'","`",$rowtext);
+					echo $rowtext;	
+				}
+				
+			//}
+			
+			
+			//}
+		}
 		
-		$rowtext=str_ireplace("&amp;","&",$rowtext);
-		$rowtext=str_ireplace("&quot;","'",$rowtext);
-		$rowtext=str_ireplace("&#039;","'",$rowtext);
-		$rowtext=str_ireplace("'","`",$rowtext);
-		echo $rowtext;	
 		
-		
-		
-		
-		//}
+		mysqli_close($link);
 	}
-	
-	
-	mysqli_close($link);
-}
 
 
 
@@ -260,7 +317,14 @@ if ($action == 'products') {
 			,
 		*/
 	//---------------------------
-	$data = mysqli_query($link,"
+	$normal=" and (pro.date_added>'".date('Y-m-d H:i:s', $lastdate)."' or pro.date_modified>'".date('Y-m-d H:i:s', $lastdate)."') ";
+if ($_REQUEST['test']) {
+	$normal='';
+}
+	
+	
+	
+	$query="
 		SELECT pro.model as product_code,
 		descr.name as product,
 		tra.rate as rate_value,
@@ -269,6 +333,7 @@ if ($action == 'products') {
 		,pro.date_modified as dd
 		,pro.image
 		,pro.product_id
+		,pro.quantity mainquantity
 		,
 		
 		
@@ -281,13 +346,41 @@ if ($action == 'products') {
 		
 		,
 		
+		(SELECT GROUP_CONCAT(prov.quantity) 
+		FROM ".$dbprefix."relatedoptions prov
+		WHERE prov.product_id=descr.product_id ) as optionsquantity
 		
-		(select GROUP_CONCAT(provo.name)
-		from ".$dbprefix."product_option_value prov
-		left join ".$dbprefix."option_value_description provo on provo.option_value_id=prov.option_value_id 
-		where prov.product_id=descr.product_id and provo.language_id=descr.language_id) as optionsdescr
+		
 		,
 		
+	
+        (SELECT GROUP_CONCAT(
+        (select opvde.name from ".$dbprefix."option_value_description opvde where opvde.option_value_id=rltop.option_value_id and opvde.language_id=descr.language_id)                
+        ) 
+		FROM ".$dbprefix."relatedoptions prov
+		left join ".$dbprefix."relatedoptions_option rltop on rltop.relatedoptions_id=prov.relatedoptions_id		
+		WHERE prov.product_id=descr.product_id ) as optionsdescr
+        
+              
+		,
+		
+		
+		
+		
+		
+		
+		 (SELECT GROUP_CONCAT(
+        (select opvde.name from ".$dbprefix."option_description opvde where opvde.option_id=rltop.option_id and opvde.language_id=descr.language_id)                
+        ) 
+		FROM ".$dbprefix."relatedoptions prov
+		left join ".$dbprefix."relatedoptions_option rltop on rltop.relatedoptions_id=prov.relatedoptions_id		
+		WHERE prov.product_id=descr.product_id ) as optionsnametitle
+        
+              
+		,
+		
+		
+	 
 		
 		
 		(select GROUP_CONCAT(  concat(prov.price_prefix  ,prov.price)   )
@@ -348,10 +441,21 @@ if ($action == 'products') {
 		langu.code='".$lang_code."'
 		and cdes.language_id=descr.language_id 
 		
-		and (pro.date_added>'".date('Y-m-d H:i:s', $lastdate)."' or pro.date_modified>'".date('Y-m-d H:i:s', $lastdate)."')
+		$normal
 		
 		group by descr.product_id
-		") or die(mysqli_error($link)); 
+		";
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		//echo $query;
+	$data = mysqli_query($link,$query) or die(mysqli_error($link)); 
 	//---------------------------
 	//date('Y-m-d H:i:s', $lastdate)
 	
@@ -376,10 +480,14 @@ if ($action == 'products') {
 		
 		$taxrate=24;
 		
+		$quantity=$alldata['mainquantity'];
+		
 		//additional products based on options
 		$arr_sku = explode(',', $alldata['optionssku']);
 		$arr_descr = explode(',', $alldata['optionsdescr']);
 		$arr_price = explode(',', $alldata['optionsprice']);
+		$arr_nametitle = explode(',', $alldata['optionsnametitle']);
+		$arr_quantity= explode(',', $alldata['optionsquantity']); 
 		$mc=count($arr_sku);
 		$hidebasic=false;
 		
@@ -409,8 +517,9 @@ if ($action == 'products') {
 					}
 					
 					$arr_sku_name = preg_replace('/[0-9]+/', '', $arr_sku[$x]);
+					$arr_descr_name = preg_replace('/[0-9]+/', '', $arr_descr[$x]);
 					
-					echo $product_code_prefix. $arr_sku[$x].';'.$name1.' '.$arr_sku_name.';ΚΑΤΑΣΚΕΥΑΣΤΗΣ:'.$manuname.'\n;'.$taxrate.';'.$pricen.";;;".$measurement.";".$category.";".$photourl.$alldata['image'].";".$produrl.$alldata['product_id'].";;;1;<br>\n";	
+					echo $product_code_prefix. $arr_sku[$x].';'.$name1.' '.$arr_nametitle[$x].' '.$arr_descr[$x].';ΚΑΤΑΣΚΕΥΑΣΤΗΣ:'.$manuname.'\n;'.$taxrate.';'.$pricen.";;".$arr_quantity[$x].";".$measurement.";".$category.";".$photourl.$alldata['image'].";".$produrl.$alldata['product_id'].";;;1;<br>\n";	
 				}
 			}
 		}
@@ -423,7 +532,7 @@ if ($action == 'products') {
 			if ($priced!=0) { $price=$priced; }
 			
 			
-			echo $product_code_prefix.$id.';'.$name1.';ΚΑΤΑΣΚΕΥΑΣΤΗΣ:'.$manuname.'\n;'.$taxrate.';'.$price.";;;".$measurement.";".$category.";".$photourl.$alldata['image'].";".$produrl.$alldata['product_id'].";;;1;<br>\n";
+			echo $product_code_prefix.$id.';'.$name1.';ΚΑΤΑΣΚΕΥΑΣΤΗΣ:'.$manuname.'\n;'.$taxrate.';'.$price.";".$quantity.";;".$measurement.";".$category.";".$photourl.$alldata['image'].";".$produrl.$alldata['product_id'].";;;1;<br>\n";
 		}
 		
 		
@@ -442,62 +551,129 @@ if ($action == 'products') {
 
 
 
-
-
 if ($action == 'orders') {
 	
 	
 	
-	$data = mysqli_query($link,"
-		SELECT
-		ord.order_id as order_id,
-		ord.customer_id as user_id,
-		ord.date_modified as timestamp,
-		ord.comment,
+
+	 
+			
+			$data = mysqli_query($link,"
+			SELECT 
+			ord.order_id as order_id,
+			ord.customer_id as user_id,
+			ord.date_modified as timestamp,
+			ord.comment,
+			
+			(SELECT cgr.name FROM ".$dbprefix."customer_group_description cgr where cgr.customer_group_id=ord.customer_group_id and cgr.language_id=$lang_id) as custgroup,
+			
+			lastname,
+			payment_address_1 as b_address,				
+			payment_address_2 as c_address,
+			payment_city as b_city,
+			payment_postcode as b_zipcode,
+			payment_country  as b_country,
+			payment_zone as b_state,
+			
+			shipping_lastname as slastname,
+			shipping_address_1 as sb_address,				
+			shipping_address_2 as sc_address,
+			shipping_city as sb_city,
+			shipping_postcode as sb_zipcode,
+			shipping_country  as sb_country,
+			shipping_zone as sb_state,
+			
+			
+			
+			(select ordt.value from ".$dbprefix."order_total as ordt where ordt.order_id =ord.order_id  
+			and ordt.code='shipping' limit 0,1) as shipping,
+			
+			(select ordt.title from ".$dbprefix."order_total as ordt where ordt.order_id =ord.order_id  
+			and ordt.code='shipping' limit 0,1) as shipping_title,
+			
+			(select ordt.value from ".$dbprefix."order_total as ordt where ordt.order_id =ord.order_id  
+			and ordt.code='codfee_payment' limit 0,1) as handling,
+			
+			(select ordt.title from ".$dbprefix."order_total as ordt where ordt.order_id =ord.order_id  
+			and ordt.code='codfee_payment' limit 0,1) as handling_title
+			
+			
+			FROM ".$dbprefix."order as ord
+			group by ord.order_id
+			
+			") or die(mysqli_error($link)); //
+			
+			 
 		
-		(select ordt.value from ".$dbprefix."order_total as ordt where ordt.order_id =ord.order_id  
-		and ordt.code='shipping' limit 0,1) as shipping,
 		
-		(select ordt.title from ".$dbprefix."order_total as ordt where ordt.order_id =ord.order_id  
-		and ordt.code='shipping' limit 0,1) as shipping_title,
+		echo "ΚΩΔΙΚΟΣ ΠΑΡΑΓΓΕΛΙΑΣ;ΚΩΔΙΚΟΣ ΠΕΛΑΤΗ;ΚΟΣΤΟΣ ΜΕΤΑΦΟΡΙΚΩΝ;ΚΟΣΤΟΣ ΑΝΤΙΚΑΤΑΒΟΛΗΣ;ΕΚΠΤΩΣΗ;ΗΜΕΡΟΜΗΝΙΑ;ΣΧΟΛΙΟ;ΧΡΗΣΤΗΣ;VOUCHER;ΚΑΤΑΣΤΑΣΗ;ΚΩΔΙΚΟΣ ΠΕΛΑΤΗ ΑΠΟΣΤΟΛΗΣ;<br>\n";
 		
-		(select ordt.value from ".$dbprefix."order_total as ordt where ordt.order_id =ord.order_id  
-		and ordt.code='handling' limit 0,1) as handling,
-		
-		(select ordt.title from ".$dbprefix."order_total as ordt where ordt.order_id =ord.order_id  
-		and ordt.code='handling' limit 0,1) as handling_title
-		
-		FROM ".$dbprefix."order as ord
-		where
-		ord.order_status_id in (1,15)
-		group by ord.order_id
-		") or die(mysqli_error($link)); //
-	
-	
-	echo "ΚΩΔΙΚΟΣ ΠΑΡΑΓΓΕΛΙΑΣ;ΚΩΔΙΚΟΣ ΠΕΛΑΤΗ;ΚΟΣΤΟΣ ΜΕΤΑΦΟΡΙΚΩΝ;ΚΟΣΤΟΣ ΑΝΤΙΚΑΤΑΒΟΛΗΣ;ΕΚΠΤΩΣΗ;ΗΜΕΡΟΜΗΝΙΑ;ΣΧΟΛΙΟ;<br>\n";
-	
-	while($alldata = mysqli_fetch_array( $data ))
-	{
-		$id=$alldata['order_id'];  	 	
-		$userid= $alldata['user_id']; 
-		//$hmera=gmdate("d/m/Y H:i:s", $alldata['timestamp'] + 3600*($timezone+date("I"))); 
-		$hmera=$alldata['timestamp'] ;
-		$shipping=   str_replace('€','',       $alldata['shipping']);
-		$shipping=   str_replace('.',',',       $shipping);
-		$shipping_title= $alldata['shipping_title'];		
-		$comment=$alldata['comment'] ;
-		$handling=   str_replace('€','',       $alldata['handling']);
-		$handling=   str_replace('.',',',       $handling);
-		$handling_title= $alldata['handling_title'];
-		
-		
-		if ($userid==0) {
-			echo $id.';'.$onetime_customer_code_prefix.$id.";".$shipping.";".$handling.";0;".$hmera.";".$shipping_title."\n".$handling_title."\n".$comment.";<br>\n";
-		} else {					
-			echo $id.';'.$customer_code_prefix.$userid.";".$shipping.";".$handling.";0;".$hmera.";".$shipping_title."\n".$handling_title."\n".$comment.";<br>\n";
+		while($alldata = mysqli_fetch_array( $data ))
+		{
+			$id=$alldata['order_id'];  	 	
+			$userid= $alldata['user_id']; 
+			//$hmera=gmdate("d/m/Y H:i:s", $alldata['timestamp'] + 3600*($timezone+date("I"))); 
+			$hmera=$alldata['timestamp'] ;
+			$shipping=   str_replace('€','',       $alldata['shipping']);
+			$shipping=   str_replace('.',',',       $shipping);
+			$shipping_title= $alldata['shipping_title'];	 		
+			$comment=$alldata['comment'] ;		 								
+			$handling=   str_replace('€','',       $alldata['handling']);
+			$handling=   str_replace('.',',',       $handling);
+			$handling_title= $alldata['handling_title']; 
+			
+			$comment2=$shipping_title." ".$handling_title." "/*.$alldata['custgroup']*/." ".$comment;		
+			$comment2=str_ireplace("&amp;","&",$comment2);		
+			$comment2=str_ireplace("&quot;","'",$comment2);		
+			$comment2=str_ireplace("&#039;","'",$comment2);		
+			$comment2=str_ireplace("'","`",$comment2); 						
+			$comment2=str_ireplace("\n"," ",$comment2);			
+			$comment2=str_ireplace("<br>"," ",$comment2);  
+			
+			
+			
+			
+			$idp='';
+			// NEW CUSTOMER FOR PAYMENT
+	 
+				
+				// NEW CUSTOMER FOR PAYMENT
+				if (($alldata['sb_address']) 
+				&& (
+				($alldata['lastname']<>$alldata['lastname'])
+				|| ($alldata['sb_address']<>$alldata['b_address'])
+				|| ($alldata['sc_address']<>$alldata['c_address'])
+				|| ($alldata['sb_zipcode']<>$alldata['b_zipcode'])
+				|| ($alldata['sb_country']<>$alldata['b_country'])
+				|| ($alldata['sb_state']<>$alldata['b_state'])
+				|| ($alldata['sb_city']<>$alldata['b_city'])
+				//|| ($companyname<>$alldata['company'])				
+				))
+				{
+					
+					if ($userid==0) {
+						$idp=$onetime_customer_code_prefix.$id.'.P';
+						echo $id.';'.$idp.";".$shipping.";".$handling.";0;".$hmera.";".$comment2.";;;;".$onetime_customer_code_prefix.$id.";<br>\n";
+						} else {
+						$idp=$customer_code_prefix.$userid.'.P';
+						echo $id.';'.$idp.";".$shipping.";".$handling.";0;".$hmera.";".$comment2.";;;;".$customer_code_prefix.$userid.";<br>\n";
+					}
+					
+					
+					} else {
+					if ($userid==0) {
+						echo $id.';'.$onetime_customer_code_prefix.$id.";".$shipping.";".$handling.";0;".$hmera.";".$comment2.";;;;;<br>\n";
+						} else {					
+						echo $id.';'.$customer_code_prefix.$userid.";".$shipping.";".$handling.";0;".$hmera.";".$comment2.";;;;;<br>\n";
+					}
+					
+					
+				}
+		 
+			
+			
+			
 		}
-		
-	}
 }
 
 
@@ -512,7 +688,7 @@ if ($action == 'order') {
 		SELECT
 		ord.order_id as order_id,
 		ord.name as product,
-		pro.model as product_code,
+		ord.ean as product_code,
 		ord.total as price,
 		ord.quantity as amount,
 		ord.product_id as product_id,
@@ -543,17 +719,21 @@ if ($action == 'order') {
 		
 		
 		echo $product_code_prefix.$product_id.';'.$description.';;;'.$product_quantity.';'.$monada.';'.$amount.';'.$taxrate.';'.$discount.";<br>\n";
+		
+		
+		
 		////split prostheta   
 		
 		
-		$datap = mysqli_query($link,"
+		/*$datap = mysqli_query($link,"
 			SELECT 
 			ord.order_id as order_id,
 			concat(ord.name,':',ord.value) as product,
 			'".$addonid."' as product_code,
 			0 as price,
 			0 as rate_value,
-			0 as amount
+			1 as amount,
+			1000 as monada
 			FROM ".$dbprefix."order_option as ord
 			left join ".$dbprefix."order_product as pord on pord.order_product_id=ord.order_product_id
 			
@@ -616,7 +796,7 @@ if ($action == 'order') {
 		
 		
 		
-		
+		*/
 		
 		
 		
@@ -627,7 +807,7 @@ if ($action == 'order') {
 		
 	}
 	
-	
+
 }
 
 
@@ -705,6 +885,12 @@ if ($action == 'updatestock') {
 			(select sum(rel.quantity)
 			from ".$dbprefix."relatedoptions rel
 			where rel.product_id=".$prodid.")
+			
+			,stock_status_id=
+			
+			(case when (select sum(rel.quantity)
+			from ".$dbprefix."relatedoptions rel
+			where rel.product_id=".$prodid.")>0 then $avail_id else $notavail_id end)
 			
 			
 			
@@ -1180,7 +1366,7 @@ if ($action == 'uploadproduct') {
 	
 	
 	
-	
+	 
 	
 	
 	
