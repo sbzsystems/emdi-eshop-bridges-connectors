@@ -1,81 +1,61 @@
 ﻿<?php
 /*------------------------------------------------------------------------
-# EMDI - CSCART BRIDGE by SBZ systems - Solon Zenetzis - version 1.4
+# EMDI - CSCART BRIDGE by SBZ systems - Solon Zenetzis - version 2
 # ------------------------------------------------------------------------
 # author    SBZ systems - Solon Zenetzis
-# copyright Copyright (C) 2014 sbzsystems.com. All Rights Reserved.
+# copyright Copyright (C) 2019 sbzsystems.com. All Rights Reserved.
 # @license - http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL
 # Websites: http://www.sbzsystems.com
 # Technical Support:  Forum - http://www.sbzsystems.com
 -------------------------------------------------------------------------*/
-
 //header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 //header('Content-Type: text/html; charset=UTF-8');
-
-define('AREA', null);
-require 'config.local.php';
-
+//define('AREA', null);
+//require 'config.local.php';
 $offset= '';
-$host = $config['db_host'];
-$user = $config['db_user'];
-$password = $config['db_password'];
-$db = $config['db_name'];
+$host = 'localhost';//$config['db_host'];
+$user = 'markcent_root';//$config['db_user'];
+$password = 'q^*QRD-g,X#d';//$config['db_password'];
+$db = 'markcent_lias';//$config['db_name'];
 $dbprefix = 'cscart_';
 $product_code_prefix='';
 $customer_code_prefix='IC';
-$onetime_customer_code_prefix='AC';
-$tmp_path = getcwd().'/tmp';
+$lang_code='el';
+$tmp_path = $_SERVER['DOCUMENT_ROOT'].'/tmp';
 $timezone=$config->offset; 
-$lang_code='EL';
+$lang_code='el';
 //$coid=" and  ".$dbprefix."products.company_id=2";
-
 	
 //////////////
 $measurement_field='Μονάδα μέτρησης';
-$vat_field='Α.Φ.Μ.';
-$tax_office_field='Δ.Ο.Υ.';
+$vat_field='ΑΦΜ';
+$tax_office_field='ΔΟΥ';
 $occupation='Επάγγελμα';
 $companytitle='Επωνυμία';
-
+$monada='ΤΕΜΑΧΙΑ';
 //$maintax=23;
 // Connects to your Database
-$link=mysql_connect("$host", $user, $password) or die(mysql_error());
-mysql_select_db("$db") or die(mysql_error());
-mysql_set_charset('utf8',$link); 
-
-
+$link =mysqli_connect("$host", $user, $password) or die(mysqli_error($link));
+mysqli_select_db($link,"$db") or die(mysqli_error($link));
+mysqli_set_charset($link,'utf8');
+ 
 $productid=$_REQUEST['productid'];
 $stock=$_REQUEST['stock'];
 $ip=$_SERVER['REMOTE_ADDR'];   // USER'S IP 
 $action=$_REQUEST['action'];       // PRODUCT CODE
 $orderid=$_REQUEST['orderid'];       // PRODUCT CODE
 $key=$_REQUEST['key'];       // PRODUCT CODE
-if (!($key==$password)) { exit; }
+//if (!($key==$password)) { exit; }
 ///////////////////////////////////
-
-
 if (!is_dir($tmp_path)) {
 	mkdir($tmp_path);
 }
-
-
 if ($action == 'deletetmp') {
 	$File = $tmp_path."/customers_".$key;
 	unlink($File);
 	$file = $tmp_path."/products_".$key; 
 	unlink($file);
 }
-
-
-
-
-
-
-
-
-
-
-
 //echo getcwd().'/'.$tmp_path."/products_".$key.'#';
  
 if ($action == 'customersok') {
@@ -94,10 +74,8 @@ if ($action == 'productsok') {
 }
  
  
-
  
 if ($action == 'customers') {
-
 $file = $tmp_path."/customers_".$key; 
 $lastdate=0;
 if (file_exists($file)) {
@@ -105,17 +83,15 @@ if (file_exists($file)) {
 	$lastdate = fread($handle, 11); 
 	fclose($handle); 
 }
-
-
 //// CUSTOMERS
-$data = mysql_query("SELECT * FROM ".$dbprefix."users, ".$dbprefix."user_profiles where timestamp>".$lastdate
+$data = mysqli_query($link,"SELECT * FROM ".$dbprefix."users, ".$dbprefix."user_profiles where timestamp>".$lastdate
                 .' and '.$dbprefix."users.user_id=".$dbprefix."user_profiles.user_id"
 				.' and '.$dbprefix."users.status='A' and ".$dbprefix."users.user_type='C' ORDER BY ".$dbprefix."users.user_id"
-				) or die(mysql_error());
+				) or die(mysqli_error($link));
 										
 echo "ΚΩΔΙΚΟΣ;ΟΝΟΜΑ;ΕΠΙΘΕΤΟ;ΔΙΕΥΘΥΝΣΗ;ΤΚ;ΧΩΡΑ;ΠΟΛΗ/ΝΟΜΟΣ;ΠΕΡΙΟΧΗ;ΤΗΛΕΦΩΝΟ;ΚΙΝΗΤΟ;EMAIL;ΑΦΜ;ΔΟΥ;ΕΠΩΝΥΜΙΑ;ΕΠΑΓΓΕΛΜΑ;ΓΛΩΣΣΑ;<br>\n";
 		
-while($alldata = mysql_fetch_array( $data ))
+while($alldata = mysqli_fetch_array( $data ))
 {
 		$id=$alldata['profile_id'];  	 	
   	 	$firstname= $alldata['firstname']; 
@@ -123,13 +99,12 @@ while($alldata = mysql_fetch_array( $data ))
 		$address1=$alldata['b_address'];  	 	
 		$postcode=$alldata['b_zipcode'];  	 	
 		$country=$alldata['b_country'];  	 	
-		$state=$alldata['b_state'];  	 	
-		$city=$alldata['b_city'];  	 	
+		$state=$alldata['b_city'];  	 	
+		$city=$alldata['b_state'];  	 	
 		$phonenumber=$alldata['b_phone'];  	 	
 		$mobile=$alldata['phone'];  	 	
 		$email=$alldata['email'];  	 	
 		//$companyname=$alldata['company'];  	 	
-
 		
 		$afm='';
 		$doy='';
@@ -138,42 +113,42 @@ while($alldata = mysql_fetch_array( $data ))
 		
 		//////////afm///////////////	
 		if ($vat_field) {
-		$data2 = mysql_query('SELECT * FROM '
+		$data2 = mysqli_query($link,'SELECT * FROM '
 							.$dbprefix.'profile_fields_data, '.$dbprefix.'profile_field_descriptions'
 							.' where '.$dbprefix.'profile_fields_data.field_id='.$dbprefix.'profile_field_descriptions.object_id'
 							." and ".$dbprefix."profile_field_descriptions.description='".$vat_field."'"
-							.' and '.$dbprefix.'profile_fields_data.object_id='.$id.' and '.$dbprefix."profile_fields_data.object_type='P'") or die(mysql_error());								
-		while($alldata2 = mysql_fetch_array( $data2 ))
+							.' and '.$dbprefix.'profile_fields_data.object_id='.$id.' and '.$dbprefix."profile_fields_data.object_type='P'") or die(mysqli_error($link));								
+		while($alldata2 = mysqli_fetch_array( $data2 ))
 		{ $afm=$alldata2['value']; }
 		}
 		//////////doy///////////////		
 		if ($tax_office_field) {
-		$data2 = mysql_query('SELECT * FROM '
+		$data2 = mysqli_query($link,'SELECT * FROM '
 							.$dbprefix.'profile_fields_data, '.$dbprefix.'profile_field_descriptions'
 							.' where '.$dbprefix.'profile_fields_data.field_id='.$dbprefix.'profile_field_descriptions.object_id'
 							." and ".$dbprefix."profile_field_descriptions.description='".$tax_office_field."'"
-							.' and '.$dbprefix.'profile_fields_data.object_id='.$id.' and '.$dbprefix."profile_fields_data.object_type='P'") or die(mysql_error());						
-		while($alldata2 = mysql_fetch_array( $data2 ))
+							.' and '.$dbprefix.'profile_fields_data.object_id='.$id.' and '.$dbprefix."profile_fields_data.object_type='P'") or die(mysqli_error($link));						
+		while($alldata2 = mysqli_fetch_array( $data2 ))
 		{ $doy=$alldata2['value']; }
 		}
 		//////////occupation///////////////		
 		if ($occupation) {
-		$data2 = mysql_query('SELECT * FROM '
+		$data2 = mysqli_query($link,'SELECT * FROM '
 							.$dbprefix.'profile_fields_data, '.$dbprefix.'profile_field_descriptions'
 							.' where '.$dbprefix.'profile_fields_data.field_id='.$dbprefix.'profile_field_descriptions.object_id'
 							." and ".$dbprefix."profile_field_descriptions.description='".$occupation."'"
-							.' and '.$dbprefix.'profile_fields_data.object_id='.$id.' and '.$dbprefix."profile_fields_data.object_type='P'") or die(mysql_error());						
-		while($alldata2 = mysql_fetch_array( $data2 ))
+							.' and '.$dbprefix.'profile_fields_data.object_id='.$id.' and '.$dbprefix."profile_fields_data.object_type='P'") or die(mysqli_error($link));						
+		while($alldata2 = mysqli_fetch_array( $data2 ))
 		{ $epaggelma=$alldata2['value']; }
 		}
 		//////////companytitle///////////////		
 		if ($companytitle) {
-		$data2 = mysql_query('SELECT * FROM '
+		$data2 = mysqli_query($link,'SELECT * FROM '
 							.$dbprefix.'profile_fields_data, '.$dbprefix.'profile_field_descriptions'
 							.' where '.$dbprefix.'profile_fields_data.field_id='.$dbprefix.'profile_field_descriptions.object_id'
 							." and ".$dbprefix."profile_field_descriptions.description='".$companytitle."'"
-							.' and '.$dbprefix.'profile_fields_data.object_id='.$id.' and '.$dbprefix."profile_fields_data.object_type='P'") or die(mysql_error());						
-		while($alldata2 = mysql_fetch_array( $data2 ))
+							.' and '.$dbprefix.'profile_fields_data.object_id='.$id.' and '.$dbprefix."profile_fields_data.object_type='P'") or die(mysqli_error($link));						
+		while($alldata2 = mysqli_fetch_array( $data2 ))
 		{ $companyname=$alldata2['value']; }
 		}
 		//////////////////////////////////////
@@ -183,12 +158,12 @@ while($alldata = mysql_fetch_array( $data ))
 ///////////////////////
 //// ONE TIME CUSTOMERS
 /////////////////////// 
-$data = mysql_query("SELECT * FROM ".$dbprefix."orders where timestamp>".$lastdate
-                .' and '.$dbprefix."orders.user_id=0 and tax_exempt='N' ") or die(mysql_error());
+$data = mysqli_query($link,"SELECT * FROM ".$dbprefix."orders where timestamp>".$lastdate
+                .' and '.$dbprefix."orders.user_id=0 and tax_exempt='N' ") or die(mysqli_error($link));
 							// status<>'C' and status<>'D' and status<>'I' and status<>'F' and 
 						
 		
-while($alldata = mysql_fetch_array( $data ))
+while($alldata = mysqli_fetch_array($data ))
 {
 		$id=$alldata['order_id'];  	 	
   	 	$firstname= $alldata['firstname']; 
@@ -196,13 +171,12 @@ while($alldata = mysql_fetch_array( $data ))
 		$address1=$alldata['b_address'];  	 	
 		$postcode=$alldata['b_zipcode'];  	 	
 		$country=$alldata['b_country'];  	 	
-		$state=$alldata['b_state'];  	 	
-		$city=$alldata['b_city'];  	 	
+		$state=$alldata['b_city'];  	 	
+		$city=$alldata['b_state'];  	 	
 		$phonenumber=$alldata['b_phone'];  	 	
 		$mobile=$alldata['phone'];  	 	
 		$email=$alldata['email'];  	 	
 		//$companyname=$alldata['company'];  	 	
-
 		if (!$lastname) { $lastname=$alldata['email'];  }
 		
 		
@@ -210,59 +184,51 @@ while($alldata = mysql_fetch_array( $data ))
 		$doy='';
 		$epaggelma='';
 		$companyname='';
-
 		//////////afm///////////////	
 		if ($vat_field) {
-		$data2 = mysql_query('SELECT * FROM '
+		$data2 = mysqli_query($link,'SELECT * FROM '
 							.$dbprefix.'profile_fields_data, '.$dbprefix.'profile_field_descriptions'
 							.' where '.$dbprefix.'profile_fields_data.field_id='.$dbprefix.'profile_field_descriptions.object_id'
 							." and ".$dbprefix."profile_field_descriptions.description='".$vat_field."'"
-							.' and '.$dbprefix.'profile_fields_data.object_id='.$id.' and '.$dbprefix."profile_fields_data.object_type='O'") or die(mysql_error());						
-		while($alldata2 = mysql_fetch_array( $data2 ))
+							.' and '.$dbprefix.'profile_fields_data.object_id='.$id.' and '.$dbprefix."profile_fields_data.object_type='O'") or die(mysqli_error($link));						
+		while($alldata2 = mysqli_fetch_array( $data2 ))
 		{ $afm=$alldata2['value']; }
 		}
 		//////////doy///////////////		
 		if ($tax_office_field) {
-		$data2 = mysql_query('SELECT * FROM '
+		$data2 = mysqli_query($link,'SELECT * FROM '
 							.$dbprefix.'profile_fields_data, '.$dbprefix.'profile_field_descriptions'
 							.' where '.$dbprefix.'profile_fields_data.field_id='.$dbprefix.'profile_field_descriptions.object_id'
 							." and ".$dbprefix."profile_field_descriptions.description='".$tax_office_field."'"
-							.' and '.$dbprefix.'profile_fields_data.object_id='.$id.' and '.$dbprefix."profile_fields_data.object_type='O'") or die(mysql_error());						
-		while($alldata2 = mysql_fetch_array( $data2 ))
+							.' and '.$dbprefix.'profile_fields_data.object_id='.$id.' and '.$dbprefix."profile_fields_data.object_type='O'") or die(mysqli_error($link));						
+		while($alldata2 = mysqli_fetch_array( $data2 ))
 		{ $doy=$alldata2['value']; }
 		}
 		//////////occupation///////////////		
 		if ($occupation) {
-		$data2 = mysql_query('SELECT * FROM '
+		$data2 = mysqli_query($link,'SELECT * FROM '
 							.$dbprefix.'profile_fields_data, '.$dbprefix.'profile_field_descriptions'
 							.' where '.$dbprefix.'profile_fields_data.field_id='.$dbprefix.'profile_field_descriptions.object_id'
 							." and ".$dbprefix."profile_field_descriptions.description='".$occupation."'"
-							.' and '.$dbprefix.'profile_fields_data.object_id='.$id.' and '.$dbprefix."profile_fields_data.object_type='O'") or die(mysql_error());						
-		while($alldata2 = mysql_fetch_array( $data2 ))
+							.' and '.$dbprefix.'profile_fields_data.object_id='.$id.' and '.$dbprefix."profile_fields_data.object_type='O'") or die(mysqli_error($link));						
+		while($alldata2 = mysqli_fetch_array( $data2 ))
 		{ $epaggelma=$alldata2['value']; }
 		}
 		//////////companytitle///////////////		
 		if ($companytitle) {
-		$data2 = mysql_query('SELECT * FROM '
+		$data2 = mysqli_query($link,'SELECT * FROM '
 							.$dbprefix.'profile_fields_data, '.$dbprefix.'profile_field_descriptions'
 							.' where '.$dbprefix.'profile_fields_data.field_id='.$dbprefix.'profile_field_descriptions.object_id'
 							." and ".$dbprefix."profile_field_descriptions.description='".$companytitle."'"
-							.' and '.$dbprefix.'profile_fields_data.object_id='.$id.' and '.$dbprefix."profile_fields_data.object_type='O'") or die(mysql_error());						
-		while($alldata2 = mysql_fetch_array( $data2 ))
+							.' and '.$dbprefix.'profile_fields_data.object_id='.$id.' and '.$dbprefix."profile_fields_data.object_type='O'") or die(mysqli_error($link));						
+		while($alldata2 = mysqli_fetch_array( $data2 ))
 		{ $companyname=$alldata2['value']; }
 		}
 		//////////////////////////////////////		
 		echo $onetime_customer_code_prefix.$id.';'.$firstname.';'.$lastname.';'.$address1.';'.$postcode.';'.$country.';'.$state.';'.$city.';'
 		.$phonenumber.';'.$mobile.';'.$email.';'.$afm.';'.$doy.';'.$companyname.';'.$epaggelma.';'.$language,";<br>\n";
 }
-
 }
-
-
-
-
-
-
 
 
 
@@ -372,7 +338,8 @@ while($alldata = mysqli_fetch_array( $data ))
 		{ $nmonada=$alldata2['variant']; }
 		}
 		
-		
+		$taxrate='';
+		$price='|9:'.$price;
 		$row=$product_code_prefix.$id.';'.$name1.';;'.$taxrate.';'.$price.";;;".$nmonada.";".$category.";<br>\n";			 
 		$row=html_entity_decode($row);
 		echo $row;
@@ -397,7 +364,28 @@ prds.product, ".$dbprefix."product_options_inventory.product_code,
 ".$dbprefix."category_descriptions.category,
 ".$dbprefix."products.amount,
 ".$dbprefix."products.updated_timestamp,
-povdscr.variant_name
+
+
+ 
+ 
+ 
+(
+
+SELECT povdscr.variant_name 
+FROM ".$dbprefix."product_options popt
+left join ".$dbprefix."product_option_variants pov on pov.option_id=popt.option_id
+left join ".$dbprefix."product_option_variants_descriptions povdscr on  povdscr.variant_id=pov.variant_id
+
+where popt.product_id=".$dbprefix."products.product_id
+and concat(popt.option_id,'_',pov.variant_id)=".$dbprefix."product_options_inventory.combination
+
+) variant_name,
+
+
+
+
+
+".$dbprefix."product_options_inventory.combination variant_name2
 
 FROM 
 ".$dbprefix."product_options_inventory
@@ -412,11 +400,6 @@ on  prds.product_id=".$dbprefix."products.product_id
 
 
 
-
-
-
-left join ".$dbprefix."product_option_variants_descriptions povdscr
-on  povdscr.variant_id=".$dbprefix."products.product_id
 
 
 
@@ -447,7 +430,7 @@ group by ".$dbprefix."product_options_inventory.product_code
 //and prds.lang_code='".$lang_code."'
 //echo $query;
 
-$data = mysqli_query($link,$query) or die(mysqli_error($link));
+$data = mysqli_query($link,$query) or die(mysqli_error($link)); 
 		
 while($alldata = mysqli_fetch_array( $data ))
 {
@@ -492,7 +475,8 @@ while($alldata = mysqli_fetch_array( $data ))
 		
 		
 
-        
+        $taxrate='';
+		$price='|9:'.$price;
 		echo $product_code_prefix.$id.';'.$name1.' '.$variant_name.';;'.$taxrate.';'.$price.";;;".$monada.";".$category.";<br>\n";			 
 		
 
@@ -506,114 +490,82 @@ while($alldata = mysqli_fetch_array( $data ))
 
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 if ($action == 'orders') {
-$data = mysql_query("SELECT * FROM ".$dbprefix."orders where status<>'C' and status<>'D' and status<>'I' and status<>'F' and tax_exempt='N' order by order_id,user_id desc") or die(mysql_error()); //
-
-//C D I F status='O'  
-
-
+$data = mysqli_query($link,"SELECT * FROM ".$dbprefix."orders where status<>'D' and status<>'C' and status<>'N' and status<>'I' and status<>'E' and status<>'F' and tax_exempt='N' order by order_id,user_id desc") or die(mysqli_error($link)); //
+//C D I F status='O'
+  
 echo "ΚΩΔΙΚΟΣ ΠΑΡΑΓΓΕΛΙΑΣ;ΚΩΔΙΚΟΣ ΠΕΛΑΤΗ;ΚΟΣΤΟΣ ΜΕΤΑΦΟΡΙΚΩΝ;ΚΟΣΤΟΣ ΑΝΤΙΚΑΤΑΒΟΛΗΣ;ΕΚΠΤΩΣΗ;ΗΜΕΡΟΜΗΝΙΑ;<br>\n";
 		
-while($alldata = mysql_fetch_array( $data ))
+while($alldata = mysqli_fetch_array($data ))
 {
 		$id=$alldata['order_id'];  	 	
-  	 	$userid= $alldata['user_id']; 
+  	 	$userid= $alldata['user_id'];
+        $shipping= $alldata['shipping_cost'];
+        $handling= $alldata['payment_surcharge'];
+        $discount= $alldata['discount'];   		
   	 
-
 		
 		$hmera=gmdate("d/m/Y H:i:s", $alldata['timestamp'] + 3600*($timezone+date("I"))); 
-
 		
-  	    //$shipping=   str_replace('€','',       $alldata['shipping']); 
-
+  	    $shipping=   str_replace('€','',       $shipping);
+        $shipping=   str_replace('.',',',       $shipping);		
+		$handling=   str_replace('€','',       $handling);
+        $handling=   str_replace('.',',',       $handling);
+		$discount=   str_replace('€','',       $discount);
+        $discount=   str_replace('.',',',       $discount);				
 		
 		
 		
 		if ($userid==0) {
-			echo $id.';'.$onetime_customer_code_prefix.$id.";".$shipping.";0;0;".$hmera.";<br>\n";
+			echo $id.';'.$onetime_customer_code_prefix.$id.";".$shipping.";".$handling.";".$discount.";".$hmera.";<br>\n";
 		} else {					
-			echo $id.';'.$customer_code_prefix.$userid.";".$shipping.";0;0;".$hmera.";<br>\n";
+			echo $id.';'.$customer_code_prefix.$userid.";".$shipping.";".$handling.";".$discount.";".$hmera.";<br>\n";
 		}
-
 		
 		
 }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
 
 if ($action == 'order') {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ////PRODUCTS
-$data = mysql_query("SELECT  ".$dbprefix."order_details.amount,
+$data = mysqli_query($link,"SELECT  ".$dbprefix."order_details.amount,
 ".$dbprefix."product_descriptions.product,".$dbprefix."products.product_code,".$dbprefix."order_details.price,".$dbprefix."tax_rates.rate_value
 ,".$dbprefix."order_details.extra,
 ".$dbprefix."products.product_id
-
 FROM ".$dbprefix."order_details,
 ".$dbprefix."products
-
 left join ".$dbprefix."product_descriptions
 on  ".$dbprefix."product_descriptions.product_id=".$dbprefix."products.product_id
-
 left join ".$dbprefix."product_prices
 on  ".$dbprefix."product_prices.product_id=".$dbprefix."products.product_id
-
 left join ".$dbprefix."tax_rates
 on  ".$dbprefix."tax_rates.tax_id=".$dbprefix."products.tax_ids and ".$dbprefix."tax_rates.rate_type='P'
-
 where
 ".$dbprefix."order_details.product_id=".$dbprefix."products.product_id
  and ".$dbprefix."order_details.order_id=".$orderid.
-
 " group by ".$dbprefix."products.product_id"
-
-
-) or die(mysql_error()); 
-
+) or die(mysqli_error($link)); 
 echo "ΚΩΔΙΚΟΣ;ΠΕΡΙΓΡΑΦΗ1;ΠΕΡΙΓΡΑΦΗ2;ΠΕΡΙΓΡΑΦΗ3;ΠΟΣΟΤΗΤΑ;ΜΟΝΑΔΑ;ΤΙΜΗ;ΦΠΑ;ΕΚΠΤΩΣΗ;<br>\n";
 		
-while($alldata = mysql_fetch_array( $data ))
+while($alldata = mysqli_fetch_array( $data ))
 {
   	 	$description = $alldata['product']; 
   	 	$product_id = $alldata['product_code']; 
@@ -629,7 +581,7 @@ while($alldata = mysql_fetch_array( $data ))
 		
 		//////////monada metrhshs///////////////	
 		if ($measurement_field) {
-		$data2 = mysql_query('SELECT * FROM '
+		$data2 = mysqli_query($link,'SELECT * FROM '
 		
 							.$dbprefix.'product_features_values,'
 							.$dbprefix.'product_features_descriptions,'
@@ -639,13 +591,11 @@ while($alldata = mysql_fetch_array( $data ))
 							.' and '.$dbprefix.'product_feature_variant_descriptions.variant_id='.$dbprefix.'product_features_values.variant_id'
 							.' and '.$dbprefix.'product_features_values.product_id='.$alldata['product_id']
 							.' and '.$dbprefix."product_features_descriptions.description='".$measurement_field."'"
-		) or die(mysql_error());						
+		) or die(mysqli_error($link));						
 		$monada='';
-		while($alldata2 = mysql_fetch_array( $data2 ))
+		while($alldata2 = mysqli_fetch_array( $data2 ))
 		{ $monada=$alldata2['variant']; }
 		}
-
-		
 		
 		
 		echo $product_code_prefix.$product_id.';'.$description.';;;'.$product_quantity.';'.$monada.';'.$amount.';'.$taxrate.';'.$discount.";<br>\n";
@@ -654,7 +604,6 @@ while($alldata = mysql_fetch_array( $data ))
 			
 		$sel=0; $prv=''; $cou=0;
 		foreach ($words as $k => $word) {
-
 			preg_match('/"([^"]+)"/', $word, $result);		
 					
 			if ($sel==1) {
@@ -680,51 +629,7 @@ while($alldata = mysql_fetch_array( $data ))
 		
 		
 }
-
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -734,42 +639,36 @@ while($alldata = mysql_fetch_array( $data ))
 
 
  
-
-
 if ($action == 'confirmorder') {
-
 //echo"UPDATE ".$dbprefix."vm_orders SET order_status = 'S' WHERE order_id in (".$orderid.")";
 //
 //$data = mysql_query("UPDATE admin_whmcs.tblinvoices SET notes = 'ΚΟΠΗΚΕ ΤΙΜΟΛΟΓΙΟ ".$hmera."' WHERE notes='' and tblinvoices.id in (".$orderid.")") or die(mysql_error()); 
-$data = mysql_query("UPDATE ".$dbprefix."orders SET status = 'C' WHERE order_id in (".$orderid.")") or die(mysql_error());
-
+$data = mysqli_query($link,"UPDATE ".$dbprefix."orders SET status = 'C' WHERE order_id in (".$orderid.")") or die(mysqli_error($link));
 echo $hmera;
 }
+
+
+
+
+
+
 
 
 
 
 
 if ($action == 'updatestock') {
-
 //echo"UPDATE ".$dbprefix."vm_orders SET order_status = 'S' WHERE order_id in (".$orderid.")";
 //
 //$data = mysql_query("UPDATE admin_whmcs.tblinvoices SET notes = 'ΚΟΠΗΚΕ ΤΙΜΟΛΟΓΙΟ ".$hmera."' WHERE notes='' and tblinvoices.id in (".$orderid.")") or die(mysql_error()); 
-
 //echo "UPDATE ".$dbprefix."products SET amount = ".$stock." WHERE ".$dbprefix."products.product_id =".$productid;
 //echo substr($productid,strlen($product_code_prefix));
-$data = mysql_query("UPDATE ".$dbprefix."products SET amount = ".$stock." WHERE ".$dbprefix."products.product_code ='".substr($productid,strlen($product_code_prefix))."'") or die(mysql_error());
+$data = mysqli_query($link,"UPDATE ".$dbprefix."products SET amount = ".$stock." WHERE product_code ='".substr($productid,strlen($product_code_prefix))."'") or die(mysqli_error($link));
 
 $data = mysqli_query($link,"UPDATE ".$dbprefix."product_options_inventory SET amount = ".$stock." WHERE product_code ='".substr($productid,strlen($product_code_prefix))."'") or die(mysqli_error($link));
+
 		
 echo $hmera;
 }
-
-
-
 //header("Location: $goto?expdate=$nextduedate");
-
-
-
-
 ?> 
