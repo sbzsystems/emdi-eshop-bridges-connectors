@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 error_reporting(0);
 /*------------------------------------------------------------------------
 		# EMDI - WordPress Woo BRIDGE by SBZ systems - Solon Zenetzis - version 2
@@ -9,20 +9,13 @@ error_reporting(0);
 		# Websites: https://www.sbzsystems.com
 		# Technical Support:  Forum - https://www.sbzsystems.com
 	-------------------------------------------------------------------------*/
-
 header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 header('Content-Type: text/html; charset=UTF-8');
 //error_reporting(0);
-
 require 'wp-config.php';
-
 //$test=unserialize('a:8:{s:3:"sku";s:0:"";s:8:"products";a:3:{i:1;a:3:{s:6:"option";s:3:"ttt";s:5:"price";s:3:"111";s:9:"saleprice";s:0:"";}i:2;a:3:{s:6:"option";s:3:"eee";s:5:"price";s:3:"222";s:9:"saleprice";s:0:"";}i:3;a:3:{s:6:"option";s:0:"";s:5:"price";s:0:"";s:9:"saleprice";s:0:"";}}s:11:"description";s:0:"";s:8:"shiprate";s:1:"F";s:8:"featured";s:2:"no";s:4:"sale";s:2:"no";s:10:"cart_radio";s:1:"0";s:6:"optset";s:0:"";}');
 //print_r($test);
-
 //echo $test[products][1][price];
-
-
-
 $logfile = 'emdibridge.log';
 $offset= '';
 $host = DB_HOST;
@@ -36,19 +29,16 @@ $lang_code='en';
 $tmp_path = ABSPATH . 'tmp';
 $timezone=$config->offset; 
 $passkey='';
-
 $onetime_customer_code_prefix='AC';
 $lang_id=1;
 $store_id=0;
 $relatedchar='^';
 $addonid='PRO';
-
 //////////////
 $measurement='ΤΕΜΑΧΙΑ';
 $measurementaddon='ΠΡΟΣΘΕΤΑ';
 $size_field='Μέγεθος';
 $color_field='Χρώμα';
-
 //$vat_field='ΑΦΜ';
 //$tax_office_field='ΔΟΥ';
 $maintax=24;
@@ -56,27 +46,18 @@ $maintax=24;
 $link=mysqli_connect("$host", $user, $password) or die(mysqli_error($link));
 mysqli_select_db($link,"$db") or die(mysqli_error($link));
 mysqli_set_charset($link,'utf8'); 
-
 //$photourl=HTTP_IMAGE;	
 //$produrl=HTTP_SERVER.'index.php?route=product/product&product_id=';	
 $customerid=$_REQUEST['customerid'];
 $productid=$_REQUEST['productid'];
-
 $productid=iconv("ISO-8859-7", "UTF-8",  $productid);
-
-
 $stock=$_REQUEST['stock'];
 $ip=$_SERVER['REMOTE_ADDR'];   // USER'S IP 
 $action=$_REQUEST['action'];       // PRODUCT CODE
 $orderid=$_REQUEST['orderid'];       // PRODUCT CODE
 $key=$_REQUEST['key'];       // PRODUCT CODE
-
 if (!($key==$passkey)) { exit; }
 ///////////////////////////////////
-
-
-
-
 if (!is_dir($tmp_path)) {
 	mkdir($tmp_path);
 }
@@ -92,34 +73,30 @@ if ($action == 'deletetmp') {
 
 
 
-
-
 if ($action == 'customersok') {
 	$File = $tmp_path."/customers_".$key; 
 	$Handle = fopen($File, 'w');
-	$Data = time(); 
-	fwrite($Handle, $Data); 
-	fclose($Handle); 	
+	$Data =  time()+(3*60*60); 	//time();
+	fwrite($Handle, date('Y-m-d H:i:s', $Data)); 
+	fclose($Handle); 		
 }
 if ($action == 'productsok') {
-	$file = $tmp_path."/products_".$key; 
-	$handle = fopen($file, 'w');
-	$data = time();
-	fwrite($handle, $data); 
-	fclose($handle); 	
+	$File = $tmp_path."/products_".$key; 
+	$Handle = fopen($File, 'w');
+	$Data =  time()+(3*60*60); 	//time();
+	fwrite($Handle, date('Y-m-d H:i:s', $Data)); 
+	fclose($Handle); 	
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 if ($action == 'customers') {
 	
 	$file = $tmp_path."/customers_".$key; 
 	$lastdate=0;
 	if (file_exists($file)) {
 		$handle = fopen($file, 'r'); 
-		$lastdate = fread($handle, 11); 
-		fclose($handle); 
+		$lastdate = fread($handle, 19); 
+		fclose($handle);
 	}
 	//echo date('Y-m-d H:i:s', $lastdate);
 	
@@ -153,7 +130,7 @@ if ($action == 'customers') {
 		and
 		(select pst2.meta_value from ".$dbprefix."postmeta pst2 where pst1.post_id=pst2.post_id and pst2.meta_key='_customer_user')=0
 		and  
-		(SELECT pop.post_date FROM ".$dbprefix."posts pop where pop.ID=pst1.post_id) >'".date('Y-m-d H:i:s', $lastdate)."'
+		(SELECT pop.post_date FROM ".$dbprefix."posts pop where pop.ID=pst1.post_id) >'".$lastdate."'
 		
 		
 		";
@@ -226,7 +203,7 @@ if ($action == 'customers') {
 		and
 		(select pst2.meta_value from ".$dbprefix."postmeta pst2 where pst1.post_id=pst2.post_id and pst2.meta_key='_customer_user')>0
 		and  
-		(SELECT pop.post_date FROM ".$dbprefix."posts pop where pop.ID=pst1.post_id) >'".date('Y-m-d H:i:s', $lastdate)."'
+		(SELECT pop.post_date FROM ".$dbprefix."posts pop where pop.ID=pst1.post_id) >'".$lastdate."'
 		
 		
 		";
@@ -264,10 +241,6 @@ if ($action == 'customers') {
 	
 	
 }
-
-
-
-
 if ($action == 'products') {
 	
 	
@@ -275,8 +248,8 @@ if ($action == 'products') {
 	$lastdate=0;
 	if (file_exists($file)) {
 		$handle = fopen($file, 'r'); 
-		$lastdate = fread($handle, 11); 
-		fclose($handle); 
+		$lastdate = fread($handle, 19); 
+		fclose($handle);
 	}
 	
 	////PRODUCTS
@@ -339,7 +312,7 @@ if ($action == 'products') {
 		
 		
 		
-		and (post_date>'".date('Y-m-d H:i:s', $lastdate)."' or post_modified>'".date('Y-m-d H:i:s', $lastdate)."')
+		and (posts_.post_date>'".$lastdate."' or posts_.post_modified>'".$lastdate."')
 		
 		";
 	
@@ -355,19 +328,25 @@ if ($action == 'products') {
 	
 	//---------------------------
 	//date('Y-m-d H:i:s', $lastdate)
-	
+	//echo $query;
 	echo "ΚΩΔΙΚΟΣ;ΠΕΡΙΓΡΑΦΗ1;ΠΕΡΙΓΡΑΦΗ2;ΦΠΑ;ΤΙΜΗ1;ΤΙΜΗ2;ΔΙΑΘΕΣΙΜΟΤΗΤΑ;ΜΟΝΑΔΑ;ΚΑΤΗΓΟΡΙΑ;ΦΩΤΟΓΡΑΦΙΑ;URL;;ΒΑΡΟΣ;<br>\n";
 	
 	while($alldata = mysqli_fetch_array( $data ))
 	{
 		$id=$alldata['product_code'];  	 	
-		$name1= $alldata['product']; 
+		$name1= $alldata['product'];
+		$name1=str_replace("&amp;","&",$name1);
+		$name1=str_replace("&nbsp;","",$name1);
+		$name1=str_replace("&quot;","",$name1);
+		$produrl=$alldata['product_url']; 
+		$produrl=str_replace("&#038;","",$produrl);
 		$taxrate=$alldata['rate_value'];
 		$taxrate=number_format($taxrate, 2, ',', '');	
 		$price=$alldata['price'];
 		//$price=str_replace('€','',$alldata['price']);
 		$price=number_format($price, 2, ',', '');
-		$category= $alldata['category']; 
+		$category= $alldata['category'];
+		$category=str_replace("&amp;","&",$category);		
 		$weight= $alldata['weight'];
         $stock= $alldata['stock'];
         $manufacturer= 'Κατασκευαστής:'.$alldata['manufacturer'].'\n';	 		
@@ -379,7 +358,7 @@ if ($action == 'products') {
 		//if ($priced) { $price=$priced; }
 		
 		if ($id) {
-			echo $product_code_prefix.$id.';'.$name1.';'.$manufacturer.';'.$taxrate.';'.$price.";;".$stock.";".$measurement.";".$category.";".$alldata['image'].";".$alldata['product_url'].";;".$weight.";<br>\n";		
+			echo $product_code_prefix.$id.';'.$name1.';'.$manufacturer.';'.$taxrate.';'.$price.";;".$stock.";".$measurement.";".$category.";".$alldata['image'].";".$produrl.";;".$weight.";<br>\n";		
 		}
 	}
 	
@@ -452,7 +431,7 @@ if ($action == 'products') {
 		
 		
 		
-		and (post_date>'".date('Y-m-d H:i:s', $lastdate)."' or post_modified>'".date('Y-m-d H:i:s', $lastdate)."')
+		and (post_date>'".$lastdate."' or post_modified>'".$lastdate."')
 		
 		
 		
@@ -471,7 +450,15 @@ if ($action == 'products') {
 	while($alldata = mysqli_fetch_array( $data ))
 	{
 		$id=$alldata['product_code'];  	 	
-		$name1= $alldata['product']; 
+		$name1= $alldata['product'];
+		$name1=str_replace("&amp;","&",$name1);
+		$name1=str_replace("&nbsp;","",$name1);
+		$name1=str_replace("&quot;","",$name1);
+		$name1=str_replace(";","?",$name1);
+		$category=str_replace("&amp;","&",$category);
+		$category=str_replace(";","?",$category);
+		$produrl=$alldata['product_url']; 
+		$produrl=str_replace("&#038;","",$produrl);
 		$taxrate=$alldata['rate_value'];
 		$taxrate=number_format($taxrate, 2, ',', '');	
 		$price=$alldata['price'];
@@ -502,7 +489,7 @@ if ($action == 'products') {
 		
 		
 		
-		echo $product_code_prefix.$id.';'.$name1.'&nbsp;'.$size.';'.$options.$manufacturer.';'.$taxrate.';'.$price.";;".$stock.";".$measurement.";".$category.";".$alldata['image'].";".$alldata['product_url'].";;".$weight.";<br>\n";		
+		echo $product_code_prefix.$id.';'.$name1.''.$size.';'.$options.$manufacturer.';'.$taxrate.';'.$price.";;".$stock.";".$measurement.";".$category.";".$alldata['image'].";".$produrl.";;".$weight.";<br>\n";		
 	}
 	
 	////
@@ -512,10 +499,6 @@ if ($action == 'products') {
 	
 	
 }
-
-
-
-
 if ($action == 'orders') {
 	
 	
@@ -531,8 +514,6 @@ if ($action == 'orders') {
 SELECT ori.meta_value FROM `".$dbprefix."woocommerce_order_itemmeta` ori WHERE  ori.meta_key='_fee_amount'
 AND
 ori.order_item_id=
-
-
 (SELECT orr.order_item_id FROM `".$dbprefix."woocommerce_order_items` orr WHERE orr.order_id=pst1.post_id
 and orr.order_item_type='fee')
 			
@@ -600,10 +581,6 @@ and orr.order_item_type='fee')
 		
 	}
 }
-
-
-
-
 if ($action == 'order') {
 	////order
 	
@@ -697,19 +674,12 @@ if ($action == 'order') {
 	
 	
 }
-
-
-
-
 if ($action == 'confirmorder') {
 	//('wc-completed','wc-cancelled
-	$data = mysqli_query($link,"update ".$dbprefix."posts set post_status='wc-invoice-done' where ID in (".$orderid.")") or die(mysqli_error($link));
+	$data = mysqli_query($link,"update ".$dbprefix."posts set post_status='wc-completed' where ID in (".$orderid.")") or die(mysqli_error($link));
 	
 	echo $hmera;
 }
-
-
-
 if ($action == 'updatestock') {
 	//echo "update ".$dbprefix."product set quantity=".$stock."  where product_id='".substr($productid,strlen($product_code_prefix))."'";
 	
@@ -832,7 +802,7 @@ if ($action == 'updatestock') {
 	
 	
 	
-	if ($stock>0) {
+	if ($stock_parent>0) {
 		$query="update ".$dbprefix."postmeta pos set pos.meta_value='instock' where pos.meta_key='_stock_status' and pos.post_id=".$post_id_parent;
 	} else {
 		$query="update ".$dbprefix."postmeta pos set pos.meta_value='outofstock' where pos.meta_key='_stock_status' and pos.post_id=".$post_id_parent;
@@ -845,19 +815,14 @@ if ($action == 'updatestock') {
 	
 	//ΓΙΑ WP-ROCKET - ΚΑΘΑΡΙΣΜΑ CACHE
 	require( 'wp-load.php' );
-
 	// Clear cache.
 	if ( function_exists( 'rocket_clean_domain' ) ) {
 		rocket_clean_domain();
 	}
  
  
-
 	
 }
-
-
-
 if ($action == 'cancelorder') {
 	
 	//('wc-completed','wc-cancelled
@@ -866,14 +831,7 @@ if ($action == 'cancelorder') {
 	echo $hmera;
 	
 }
-
-
-
 //header("Location: $goto?expdate=$nextduedate");
-
-
-
-
 if ($action == 'redirect') {
 	
 	//customer_code_prefix
@@ -924,11 +882,7 @@ if ($action == 'redirect') {
 	
 	
 }
-
-
-
-
-if ($action == 'uploadproduct') {
+if ($action == 'uploadproduct2') {
 	
 	
 	
@@ -1041,7 +995,6 @@ if ($action == 'uploadproduct') {
 	//
 	
 	
-
 	
 	// CREATE CATEGORY IF DOES NOT EXIST
 	$data = mysqli_query($link,"
@@ -1297,11 +1250,6 @@ if ($action == 'uploadproduct') {
 	
 	
 }
-
-
-
-
-
 function base_enc($encoded) {
 	$result='';
 	for($i=0, $len=strlen($encoded); $i<$len; $i+=4){
@@ -1309,6 +1257,4 @@ function base_enc($encoded) {
 	}
 	return $result;
 }
-
-
-?> 
+?>
