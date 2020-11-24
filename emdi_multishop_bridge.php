@@ -1,6 +1,6 @@
 <?php
 /*------------------------------------------------------------------------
-# EMDI - MULTISHOP BRIDGE by SBZ systems - Solon Zenetzis - version 1
+# EMDI - MULTISHOP BRIDGE by SBZ systems - Solon Zenetzis - version 1.0
 # ------------------------------------------------------------------------
 # author    SBZ systems - Solon Zenetzis
 # copyright Copyright (C) 2020 sbzsystems.com. All Rights Reserved.
