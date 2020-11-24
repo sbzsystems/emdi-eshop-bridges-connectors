@@ -112,14 +112,4 @@ if ($action == 'cancelorder') {
 } 
 
 
-
-
-
-function base_enc($encoded) {
-	$result='';
-	for($i=0, $len=strlen($encoded); $i<$len; $i+=4){
-		$result=$result.base64_decode( substr($encoded, $i, 4) );
-	}
-	return $result;
-}
 ?>
