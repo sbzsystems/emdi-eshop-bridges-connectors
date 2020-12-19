@@ -345,7 +345,7 @@ if ($action == 'products') {
 		and vip.modified_on>'". $lastdate ."'
 		
 		group by vip.virtuemart_product_id
-		limit 1000
+		 
 		
 		";
 	
