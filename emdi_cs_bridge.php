@@ -8,6 +8,7 @@
 # Websites: https://www.sbzsystems.com
 # Technical Support:  Forum - https://www.sbzsystems.com
 -------------------------------------------------------------------------*/
+
 //header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 //header('Content-Type: text/html; charset=UTF-8');
 //define('AREA', null);
