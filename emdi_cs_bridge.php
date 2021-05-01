@@ -14,6 +14,7 @@
 define('AREA', null);
 define('BOOTSTRAP', null);
 require 'config.local.php';
+
 $offset= '';
 $host = '$config['db_host'];
 $user = '$config['db_user'];
