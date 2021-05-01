@@ -11,13 +11,14 @@
 
 //header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 //header('Content-Type: text/html; charset=UTF-8');
-//define('AREA', null);
-//require 'config.local.php';
+define('AREA', null);
+define('BOOTSTRAP', null);
+require 'config.local.php';
 $offset= '';
-$host = 'localhost';//$config['db_host'];
-$user = 'markcent_root';//$config['db_user'];
-$password = 'q^*QRD-g,X#d';//$config['db_password'];
-$db = 'markcent_lias';//$config['db_name'];
+$host = '$config['db_host'];
+$user = '$config['db_user'];
+$password = $config['db_password'];
+$db = $config['db_name'];
 $dbprefix = 'cscart_';
 $product_code_prefix='';
 $customer_code_prefix='IC';
