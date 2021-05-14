@@ -741,7 +741,7 @@ if ($action == 'updatestock') {
 		
 		
 		//file_put_contents($logfile,'Parent:'. $query."\n", FILE_APPEND | LOCK_EX);
-		
+		if ($post_id_parent==0) { exit; }
 		
 		//get all child stock
 		$query_child="select pos.ID from ".$dbprefix."posts pos where pos.post_parent=".$post_id_parent;
