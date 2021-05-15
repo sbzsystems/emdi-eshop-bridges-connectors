@@ -59,56 +59,56 @@ $action     = $_REQUEST['action']; // PRODUCT CODE
 $orderid    = $_REQUEST['orderid']; // PRODUCT CODE
 $key        = $_REQUEST['key']; // PRODUCT CODE
 if (!($key == $passkey)) {
-    exit;
+	exit;
 }
 ///////////////////////////////////
 
 
 if (!is_dir($tmp_path)) {
-    mkdir($tmp_path);
+	mkdir($tmp_path);
 }
 
 if ($action == 'deletetmp') {
-    $File = $tmp_path . "/customers_" . $key;
-    unlink($File);
-    $file = $tmp_path . "/products_" . $key;
-    unlink($file);
+	$File = $tmp_path . "/customers_" . $key;
+	unlink($File);
+	$file = $tmp_path . "/products_" . $key;
+	unlink($file);
 }
 
 if ($action == 'customersok') {
-    $File   = $tmp_path . "/customers_" . $key;
-    $Handle = fopen($File, 'w');
-    
-    date_default_timezone_set('Europe/Athens');
-    $data = date("Y-m-d H:i:s");
-    //$data =  date("Y-m-d H:i:s",strtotime('-2 hours', time()));
-    fwrite($Handle, $data);
-    fclose($Handle);
+	$File   = $tmp_path . "/customers_" . $key;
+	$Handle = fopen($File, 'w');
+	
+	date_default_timezone_set('Europe/Athens');
+	$data = date("Y-m-d H:i:s");
+	//$data =  date("Y-m-d H:i:s",strtotime('-2 hours', time()));
+	fwrite($Handle, $data);
+	fclose($Handle);
 }
 if ($action == 'productsok') {
-    $file   = $tmp_path . "/products_" . $key;
-    $handle = fopen($file, 'w');
-    
-    date_default_timezone_set('Europe/Athens');
-    $data = date("Y-m-d H:i:s");
-    //$data =  date("Y-m-d H:i:s",strtotime('-2 hour', time()));
-    fwrite($handle, $data);
-    fclose($handle);
+	$file   = $tmp_path . "/products_" . $key;
+	$handle = fopen($file, 'w');
+	
+	date_default_timezone_set('Europe/Athens');
+	$data = date("Y-m-d H:i:s");
+	//$data =  date("Y-m-d H:i:s",strtotime('-2 hour', time()));
+	fwrite($handle, $data);
+	fclose($handle);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //CUSTOMERS BY ORDERS
 if ($action == 'customers') {
-    
-    $file     = $tmp_path . "/customers_" . $key;
-    $lastdate = 0;
-    if (file_exists($file)) {
-        $handle   = fopen($file, 'r');
-        $lastdate = fread($handle, 20);
-        fclose($handle);
-    }
-    
-    $query = "
+	
+	$file     = $tmp_path . "/customers_" . $key;
+	$lastdate = 0;
+	if (file_exists($file)) {
+		$handle   = fopen($file, 'r');
+		$lastdate = fread($handle, 20);
+		fclose($handle);
+	}
+	
+	$query = "
 			
 			SELECT 
 			
@@ -158,136 +158,136 @@ if ($action == 'customers') {
 			
 			
 			";
-    
-    /////////////
-    $data = mysqli_query($link, $query) or die(mysqli_error($link));
-    ;
-    /////////////
-    
-    
-    echo "CUSTOMER ID;FIRST NAME;LAST NAME;ADDRESS;ZIP;COUNTRY;CITY/STATE;AREA;PHONE;MOBILE;EMAIL;VAT;TAX OFFICE;COMPANY;OCCUPATION;LANGUAGE;PO BOX;<br>\n";
-    
-    while ($alldata = mysqli_fetch_array($data)) {
-        $id = $alldata['user_id'];
-        
-        if ($alldata['sb_address']) {
-            
-            $firstname   = $alldata['sfirstname'];
-            $lastname    = $alldata['slastname'];
-            $address1    = $alldata['sb_address'];
-            $tu          = $alldata['sc_address'];
-            $postcode    = $alldata['sb_zipcode'];
-            $country     = $alldata['sb_country'];
-            $state       = $alldata['sb_state'];
-            $city        = $alldata['sb_city'];
-            $companyname = $alldata['scompany'];
-            
-        } else {
-            $firstname    = $alldata['firstname'];
-            $lastname     = $alldata['lastname'];
-            $address1     = $alldata['b_address'];
-            $tu           = $alldata['c_address'];
-            $postcode     = $alldata['b_zipcode'];
-            $country      = $alldata['b_country'];
-            $state        = $alldata['b_state'];
-            $city         = $alldata['b_city'];
-            $companyname  = $alldata['company'];
-            $custom_field = $alldata['custom_field'];
-            
-            //$cfld=unserialize($custom_field);
-            $cfld        = json_decode($custom_field, true);
-            //var_dump(json_decode($cfld, true));
-            $companyname = $cfld['4'];
-            $afm         = $cfld['2'];
-            $doy         = $cfld['3'];
-            $epaggelma   = $cfld['0'];
-            
-        }
-        
-        $phonenumber = $alldata['b_phone'];
-        $mobile      = $alldata['phone'];
-        $email       = $alldata['email'];
-        $date_added  = $alldata['date_added'];
-        
-        $rowtext = $id . ';' . $firstname . ';' . $lastname . ';' . $address1 . ';' . $postcode . ';' . ';' . $state . ';' . $city . ';' . $phonenumber . ';' . $mobile . ';' . $email . ';' . $afm . ';' . $doy . ';' . $companyname . ';' . $epaggelma . ';' . $language . ';' . $tu . ";<br>\n";
-        
-        $rowtext = str_ireplace("&amp;", "&", $rowtext);
-        $rowtext = str_ireplace("&quot;", "'", $rowtext);
-        $rowtext = str_ireplace("&#039;", "'", $rowtext);
-        $rowtext = str_ireplace("'", "`", $rowtext);
-        echo $rowtext;
-        
-        // NEW CUSTOMER FOR PAYMENT
-        //if ($_REQUEST['test']=='1') {
-        // NEW CUSTOMER FOR PAYMENT
-        if (($alldata['sb_address']) && (($lastname <> $alldata['lastname']) || ($address1 <> $alldata['b_address']) || ($tu <> $alldata['c_address']) || ($postcode <> $alldata['b_zipcode']) || ($country <> $alldata['b_country']) || ($state <> $alldata['b_state']) || ($city <> $alldata['b_city'])
-        //|| ($companyname<>$alldata['company'])
-            )) {
-            
-            $firstname    = $alldata['firstname'];
-            $lastname     = $alldata['lastname'];
-            $address1     = $alldata['b_address'];
-            $tu           = $alldata['c_address'];
-            $postcode     = $alldata['b_zipcode'];
-            $country      = $alldata['b_country'];
-            $state        = $alldata['b_state'];
-            $city         = $alldata['b_city'];
-            $companyname  = $alldata['company'];
-            $custom_field = $alldata['custom_field'];
-            
-            //$cfld=unserialize($custom_field);
-            $cfld        = json_decode($custom_field, true);
-            //var_dump(json_decode($cfld, true));
-            $companyname = $cfld['4'];
-            $afm         = $cfld['2'];
-            $doy         = $cfld['3'];
-            $epaggelma   = $cfld['0'];
-            
-            $rowtext = $id . '.P;' . $firstname . ';' . $lastname . ';' . $address1 . ';' . $postcode . ';' . ';' . $state . ';' . $city . ';' . $phonenumber . ';' . $mobile . ';' . $email . ';' . $afm . ';' . $doy . ';' . $companyname . ';' . $epaggelma . ';' . $language . ';' . $tu . ";<br>\n";
-            
-            $rowtext = str_ireplace("&amp;", "&", $rowtext);
-            $rowtext = str_ireplace("&quot;", "'", $rowtext);
-            $rowtext = str_ireplace("&#039;", "'", $rowtext);
-            $rowtext = str_ireplace("'", "`", $rowtext);
-            echo $rowtext;
-        }
-        
-        //}
-        
-        
-        //}
-        
-    }
-    
-    mysqli_close($link);
+	
+	/////////////
+	$data = mysqli_query($link, $query) or die(mysqli_error($link));
+	;
+	/////////////
+	
+	
+	echo "CUSTOMER ID;FIRST NAME;LAST NAME;ADDRESS;ZIP;COUNTRY;CITY/STATE;AREA;PHONE;MOBILE;EMAIL;VAT;TAX OFFICE;COMPANY;OCCUPATION;LANGUAGE;PO BOX;<br>\n";
+	
+	while ($alldata = mysqli_fetch_array($data)) {
+		$id = $alldata['user_id'];
+		
+		if ($alldata['sb_address']) {
+			
+			$firstname   = $alldata['sfirstname'];
+			$lastname    = $alldata['slastname'];
+			$address1    = $alldata['sb_address'];
+			$tu          = $alldata['sc_address'];
+			$postcode    = $alldata['sb_zipcode'];
+			$country     = $alldata['sb_country'];
+			$state       = $alldata['sb_state'];
+			$city        = $alldata['sb_city'];
+			$companyname = $alldata['scompany'];
+			
+		} else {
+			$firstname    = $alldata['firstname'];
+			$lastname     = $alldata['lastname'];
+			$address1     = $alldata['b_address'];
+			$tu           = $alldata['c_address'];
+			$postcode     = $alldata['b_zipcode'];
+			$country      = $alldata['b_country'];
+			$state        = $alldata['b_state'];
+			$city         = $alldata['b_city'];
+			$companyname  = $alldata['company'];
+			$custom_field = $alldata['custom_field'];
+			
+			//$cfld=unserialize($custom_field);
+			$cfld        = json_decode($custom_field, true);
+			//var_dump(json_decode($cfld, true));
+			$companyname = $cfld['4'];
+			$afm         = $cfld['2'];
+			$doy         = $cfld['3'];
+			$epaggelma   = $cfld['0'];
+			
+		}
+		
+		$phonenumber = $alldata['b_phone'];
+		$mobile      = $alldata['phone'];
+		$email       = $alldata['email'];
+		$date_added  = $alldata['date_added'];
+		
+		$rowtext = $id . ';' . $firstname . ';' . $lastname . ';' . $address1 . ';' . $postcode . ';' . ';' . $state . ';' . $city . ';' . $phonenumber . ';' . $mobile . ';' . $email . ';' . $afm . ';' . $doy . ';' . $companyname . ';' . $epaggelma . ';' . $language . ';' . $tu . ";<br>\n";
+		
+		$rowtext = str_ireplace("&amp;", "&", $rowtext);
+		$rowtext = str_ireplace("&quot;", "'", $rowtext);
+		$rowtext = str_ireplace("&#039;", "'", $rowtext);
+		$rowtext = str_ireplace("'", "`", $rowtext);
+		echo $rowtext;
+		
+		// NEW CUSTOMER FOR PAYMENT
+		//if ($_REQUEST['test']=='1') {
+		// NEW CUSTOMER FOR PAYMENT
+		if (($alldata['sb_address']) && (($lastname <> $alldata['lastname']) || ($address1 <> $alldata['b_address']) || ($tu <> $alldata['c_address']) || ($postcode <> $alldata['b_zipcode']) || ($country <> $alldata['b_country']) || ($state <> $alldata['b_state']) || ($city <> $alldata['b_city'])
+					//|| ($companyname<>$alldata['company'])
+					)) {
+			
+			$firstname    = $alldata['firstname'];
+			$lastname     = $alldata['lastname'];
+			$address1     = $alldata['b_address'];
+			$tu           = $alldata['c_address'];
+			$postcode     = $alldata['b_zipcode'];
+			$country      = $alldata['b_country'];
+			$state        = $alldata['b_state'];
+			$city         = $alldata['b_city'];
+			$companyname  = $alldata['company'];
+			$custom_field = $alldata['custom_field'];
+			
+			//$cfld=unserialize($custom_field);
+			$cfld        = json_decode($custom_field, true);
+			//var_dump(json_decode($cfld, true));
+			$companyname = $cfld['4'];
+			$afm         = $cfld['2'];
+			$doy         = $cfld['3'];
+			$epaggelma   = $cfld['0'];
+			
+			$rowtext = $id . '.P;' . $firstname . ';' . $lastname . ';' . $address1 . ';' . $postcode . ';' . ';' . $state . ';' . $city . ';' . $phonenumber . ';' . $mobile . ';' . $email . ';' . $afm . ';' . $doy . ';' . $companyname . ';' . $epaggelma . ';' . $language . ';' . $tu . ";<br>\n";
+			
+			$rowtext = str_ireplace("&amp;", "&", $rowtext);
+			$rowtext = str_ireplace("&quot;", "'", $rowtext);
+			$rowtext = str_ireplace("&#039;", "'", $rowtext);
+			$rowtext = str_ireplace("'", "`", $rowtext);
+			echo $rowtext;
+		}
+		
+		//}
+		
+		
+		//}
+		
+	}
+	
+	mysqli_close($link);
 }
 
 if ($action == 'products') {
-    
-    $file     = $tmp_path . "/products_" . $key;
-    $lastdate = 0;
-    if (file_exists($file)) {
-        $handle   = fopen($file, 'r');
-        $lastdate = fread($handle, 20);
-        fclose($handle);
-    }
-    
-    ////PRODUCTS
-    /*
-    (select GROUP_CONCAT(prov.o_sku) from
-    ".$dbprefix."product_option_value prov
-    where prov.product_id=descr.product_id) as barcodes
-    
-    
-    ,
-    */
-    //---------------------------
-    $normal = " and (pro.date_added>'" . $lastdate . "' or pro.date_modified>'" . $lastdate . "') ";
-    if ($_REQUEST['test']) {
-        $normal = '';
-    }
-    
-    $query = "
+	
+	$file     = $tmp_path . "/products_" . $key;
+	$lastdate = 0;
+	if (file_exists($file)) {
+		$handle   = fopen($file, 'r');
+		$lastdate = fread($handle, 20);
+		fclose($handle);
+	}
+	
+	////PRODUCTS
+	/*
+	(select GROUP_CONCAT(prov.o_sku) from
+	".$dbprefix."product_option_value prov
+	where prov.product_id=descr.product_id) as barcodes
+	
+	
+	,
+	*/
+	//---------------------------
+	$normal = " and (pro.date_added>'" . $lastdate . "' or pro.date_modified>'" . $lastdate . "') ";
+	if ($_REQUEST['test']) {
+		$normal = '';
+	}
+	
+	$query = "
 		SELECT pro.model as product_code,
 		descr.name as product,
 		tra.rate as rate_value,
@@ -319,14 +319,14 @@ if ($action == 'products') {
 		,
 		
 	
-        (SELECT GROUP_CONCAT(
-        (select opvde.name from " . $dbprefix . "option_value_description opvde where opvde.option_value_id=rltop.option_value_id and opvde.language_id=descr.language_id)                
-        ) 
+		(SELECT GROUP_CONCAT(
+		(select opvde.name from " . $dbprefix . "option_value_description opvde where opvde.option_value_id=rltop.option_value_id and opvde.language_id=descr.language_id)                
+		) 
 		FROM " . $dbprefix . "relatedoptions prov
 		left join " . $dbprefix . "relatedoptions_option rltop on rltop.relatedoptions_id=prov.relatedoptions_id		
 		WHERE prov.product_id=descr.product_id ) as optionsdescr
-        
-              
+		
+			
 		,
 		
 		
@@ -334,18 +334,18 @@ if ($action == 'products') {
 		
 		
 		
-		 (SELECT GROUP_CONCAT(
-        (select opvde.name from " . $dbprefix . "option_description opvde where opvde.option_id=rltop.option_id and opvde.language_id=descr.language_id)                
-        ) 
+		(SELECT GROUP_CONCAT(
+		(select opvde.name from " . $dbprefix . "option_description opvde where opvde.option_id=rltop.option_id and opvde.language_id=descr.language_id)                
+		) 
 		FROM " . $dbprefix . "relatedoptions prov
 		left join " . $dbprefix . "relatedoptions_option rltop on rltop.relatedoptions_id=prov.relatedoptions_id		
 		WHERE prov.product_id=descr.product_id ) as optionsnametitle
-        
-              
+		
+			
 		,
 		
 		
-	 
+	
 		
 		
 		(select GROUP_CONCAT(  concat(prov.price_prefix  ,prov.price)   )
@@ -410,94 +410,94 @@ if ($action == 'products') {
 		
 		group by descr.product_id
 		";
-    
-    //echo $query;
-    $data = mysqli_query($link, $query) or die(mysqli_error($link));
-    //---------------------------
-    //date('Y-m-d H:i:s', $lastdate)
-    echo "ΚΩΔΙΚΟΣ;ΠΕΡΙΓΡΑΦΗ1;ΠΕΡΙΓΡΑΦΗ2;ΦΠΑ;ΤΙΜΗ ΠΩΛΗΣΗΣ;ΤΙΜΗ ΑΓΟΡΑΣ;ΔΙΑΘΕΣΙΜΟΤΗΤΑ;ΜΟΝΑΔΑ;ΚΑΤΗΓΟΡΙΑ;ΦΩΤΟΓΡΑΦΙΑ;URL;ΣΕΙΡΑ ΚΑΤΗΓΟΡΙΑΣ;ΒΑΡΟΣ;ΕΝΕΡΓΟ;<br>\n";
-    
-    while ($alldata = mysqli_fetch_array($data)) {
-        $id       = $alldata['product_code'];
-        $name1    = $alldata['product'];
-        //$name2= $alldata['attribute'];
-        $taxrate  = $alldata['rate_value'];
-        //$monada= $alldata['product_unit'];
-        //$paytype=substr($alldata['paytype'],0,1);
-        //$type=substr($alldata['keym'],0,1);
-        //$servertype=$alldata['servertype'];
-        $taxrate  = number_format($taxrate, 2, ',', '');
-        $category = $alldata['category'];
-        //$category_id= $alldata['category_id'];
-        $taxrate  = 24;
-        
-        $quantity = $alldata['mainquantity'];
-        $weight   = number_format($alldata['weight'], 2, ',', '');
-        
-        //additional products based on options
-        $arr_sku       = explode(',', $alldata['optionssku']);
-        $arr_descr     = explode(',', $alldata['optionsdescr']);
-        $arr_price     = explode(',', $alldata['optionsprice']);
-        $arr_nametitle = explode(',', $alldata['optionsnametitle']);
-        $arr_quantity  = explode(',', $alldata['optionsquantity']);
-        $mc            = count($arr_sku);
-        $hidebasic     = false;
-        
-        $price    = $alldata['price'];
-        $priced   = $alldata['priced'];
-        $manuname = $alldata['manuname'];
-        $prosku   = $alldata['prosku'];
-        
-        if ($mc) {
-            for ($x = 0; $x <= $mc; $x++) {
-                
-                if ($arr_sku[$x]) {
-                    
-                    if ($arr_sku[$x] == $id) {
-                        $hidebasic = true;
-                    }
-                    
-                    $pricen = $price + $arr_price[$x];
-                    $pricen = number_format($pricen, 2, ',', '');
-                    
-                    //$pricedn=number_format($pricedn, 2, ',', '');
-                    //if ($pricedn!=0) { $pricen=$pricedn; }
-                    if ($priced != 0) {
-                        
-                        $pricedn = number_format($priced + $arr_price[$x], 2, ',', '');
-                        $pricen  = $pricedn;
-                        
-                    }
-                    
-                    $arr_sku_name   = preg_replace('/[0-9]+/', '', $arr_sku[$x]);
-                    $arr_descr_name = preg_replace('/[0-9]+/', '', $arr_descr[$x]);
-                    
-                    echo $product_code_prefix . $arr_sku[$x] . ';' . $name1 . ' ' . $arr_nametitle[$x] . ' ' . $arr_descr[$x] . ';ΚΑΤΑΣΚΕΥΑΣΤΗΣ:' . $manuname . '\nSKU:' . $prosku . '\n;' . $taxrate . ';' . $pricen . ";;" . $arr_quantity[$x] . ";" . $measurement . ";" . $category . ";" . $photourl . $alldata['image'] . ";" . $produrl . $alldata['product_id'] . ";;" . $weight . ";1;<br>\n";
-                }
-            }
-        }
-        
-        if ($hidebasic == false) {
-            
-            $price  = number_format($price, 2, ',', '');
-            $priced = number_format($priced, 2, ',', '');
-            if ($priced != 0) {
-                $price = $priced;
-            }
-            
-            echo $product_code_prefix . $id . ';' . $name1 . ';ΚΑΤΑΣΚΕΥΑΣΤΗΣ:' . $manuname . '\nSKU:' . $prosku . '\n;' . $taxrate . ';' . $price . ";" . $quantity . ";;" . $measurement . ";" . $category . ";" . $photourl . $alldata['image'] . ";" . $produrl . $alldata['product_id'] . ";;" . $weight . ";1;<br>\n";
-        }
-        
-    }
-    ////
-    
-    
-    
+	
+	//echo $query;
+	$data = mysqli_query($link, $query) or die(mysqli_error($link));
+	//---------------------------
+	//date('Y-m-d H:i:s', $lastdate)
+	echo "ΚΩΔΙΚΟΣ;ΠΕΡΙΓΡΑΦΗ1;ΠΕΡΙΓΡΑΦΗ2;ΦΠΑ;ΤΙΜΗ ΠΩΛΗΣΗΣ;ΤΙΜΗ ΑΓΟΡΑΣ;ΔΙΑΘΕΣΙΜΟΤΗΤΑ;ΜΟΝΑΔΑ;ΚΑΤΗΓΟΡΙΑ;ΦΩΤΟΓΡΑΦΙΑ;URL;ΣΕΙΡΑ ΚΑΤΗΓΟΡΙΑΣ;ΒΑΡΟΣ;ΕΝΕΡΓΟ;<br>\n";
+	
+	while ($alldata = mysqli_fetch_array($data)) {
+		$id       = $alldata['product_code'];
+		$name1    = $alldata['product'];
+		//$name2= $alldata['attribute'];
+		$taxrate  = $alldata['rate_value'];
+		//$monada= $alldata['product_unit'];
+		//$paytype=substr($alldata['paytype'],0,1);
+		//$type=substr($alldata['keym'],0,1);
+		//$servertype=$alldata['servertype'];
+		$taxrate  = number_format($taxrate, 2, ',', '');
+		$category = $alldata['category'];
+		//$category_id= $alldata['category_id'];
+		$taxrate  = 24;
+		
+		$quantity = $alldata['mainquantity'];
+		$weight   = number_format($alldata['weight'], 2, ',', '');
+		
+		//additional products based on options
+		$arr_sku       = explode(',', $alldata['optionssku']);
+		$arr_descr     = explode(',', $alldata['optionsdescr']);
+		$arr_price     = explode(',', $alldata['optionsprice']);
+		$arr_nametitle = explode(',', $alldata['optionsnametitle']);
+		$arr_quantity  = explode(',', $alldata['optionsquantity']);
+		$mc            = count($arr_sku);
+		$hidebasic     = false;
+		
+		$price    = $alldata['price'];
+		$priced   = $alldata['priced'];
+		$manuname = $alldata['manuname'];
+		$prosku   = $alldata['prosku'];
+		
+		if ($mc) {
+			for ($x = 0; $x <= $mc; $x++) {
+				
+				if ($arr_sku[$x]) {
+					
+					if ($arr_sku[$x] == $id) {
+						$hidebasic = true;
+					}
+					
+					$pricen = $price + $arr_price[$x];
+					$pricen = number_format($pricen, 2, ',', '');
+					
+					//$pricedn=number_format($pricedn, 2, ',', '');
+					//if ($pricedn!=0) { $pricen=$pricedn; }
+					if ($priced != 0) {
+						
+						$pricedn = number_format($priced + $arr_price[$x], 2, ',', '');
+						$pricen  = $pricedn;
+						
+					}
+					
+					$arr_sku_name   = preg_replace('/[0-9]+/', '', $arr_sku[$x]);
+					$arr_descr_name = preg_replace('/[0-9]+/', '', $arr_descr[$x]);
+					
+					echo $product_code_prefix . $arr_sku[$x] . ';' . $name1 . ' ' . $arr_nametitle[$x] . ' ' . $arr_descr[$x] . ';ΚΑΤΑΣΚΕΥΑΣΤΗΣ:' . $manuname . '\nSKU:' . $prosku . '\n;' . $taxrate . ';' . $pricen . ";;" . $arr_quantity[$x] . ";" . $measurement . ";" . $category . ";" . $photourl . $alldata['image'] . ";" . $produrl . $alldata['product_id'] . ";;" . $weight . ";1;<br>\n";
+				}
+			}
+		}
+		
+		if ($hidebasic == false) {
+			
+			$price  = number_format($price, 2, ',', '');
+			$priced = number_format($priced, 2, ',', '');
+			if ($priced != 0) {
+				$price = $priced;
+			}
+			
+			echo $product_code_prefix . $id . ';' . $name1 . ';ΚΑΤΑΣΚΕΥΑΣΤΗΣ:' . $manuname . '\nSKU:' . $prosku . '\n;' . $taxrate . ';' . $price . ";" . $quantity . ";;" . $measurement . ";" . $category . ";" . $photourl . $alldata['image'] . ";" . $produrl . $alldata['product_id'] . ";;" . $weight . ";1;<br>\n";
+		}
+		
+	}
+	////
+	
+	
+	
 }
 
 if ($action == 'orders') {
-    
-    $data = mysqli_query($link, "
+	
+	$data = mysqli_query($link, "
 			SELECT 
 			ord.order_id as order_id,
 			ord.customer_id as user_id,
@@ -543,76 +543,76 @@ if ($action == 'orders') {
 			
 			FROM " . $dbprefix . "order as ord
 			where
-            ord.order_status_id in (1,2,15)
+			ord.order_status_id in (1,2,15)
 			group by ord.order_id
 			
 			") or die(mysqli_error($link)); //
-    
-    
-    echo "ΚΩΔΙΚΟΣ ΠΑΡΑΓΓΕΛΙΑΣ;ΚΩΔΙΚΟΣ ΠΕΛΑΤΗ;ΚΟΣΤΟΣ ΜΕΤΑΦΟΡΙΚΩΝ;ΚΟΣΤΟΣ ΑΝΤΙΚΑΤΑΒΟΛΗΣ;ΕΚΠΤΩΣΗ;ΗΜΕΡΟΜΗΝΙΑ;ΣΧΟΛΙΟ;ΧΡΗΣΤΗΣ;VOUCHER;ΚΑΤΑΣΤΑΣΗ;ΚΩΔΙΚΟΣ ΠΕΛΑΤΗ ΑΠΟΣΤΟΛΗΣ;<br>\n";
-    
-    while ($alldata = mysqli_fetch_array($data)) {
-        $id             = $alldata['order_id'];
-        $userid         = $alldata['user_id'];
-        //$hmera=gmdate("d/m/Y H:i:s", $alldata['timestamp'] + 3600*($timezone+date("I")));
-        $hmera          = $alldata['timestamp'];
-        $shipping       = str_replace('€', '', $alldata['shipping']);
-        $shipping       = str_replace('.', ',', $shipping);
-        $shipping_title = $alldata['shipping_title'];
-        $comment        = $alldata['comment'];
-        //	$handling=   str_replace('€','',       $alldata['handling']);
-        //$handling=   str_replace('.',',',       $handling);
-        $handling       = $alldata['handling'];
-        $handling       = 0;
-        $shipping_code  = $alldata['shipping_code'];
-        
-        if (($handling == 'cod') and ($shipping_code == 'total_based.total_based_0')) {
-            $handling = 0.001;
-        }
-        
-        $handling_title = $alldata['handling_title'];
-        
-        //$comment2=$shipping_title." ".$handling_title." "/*.$alldata['custgroup']*/." ".$comment;
-        $comment2 = $comment;
-        $comment2 = str_ireplace("&amp;", "&", $comment2);
-        $comment2 = str_ireplace("&quot;", "'", $comment2);
-        $comment2 = str_ireplace("&#039;", "'", $comment2);
-        $comment2 = str_ireplace("'", "`", $comment2);
-        $comment2 = str_ireplace("\n", " ", $comment2);
-        $comment2 = str_ireplace("<br>", " ", $comment2);
-        
-        $idp = '';
-        // NEW CUSTOMER FOR PAYMENT
-        
-        
-        // NEW CUSTOMER FOR PAYMENT
-        if (($alldata['sb_address']) && (($alldata['lastname'] <> $alldata['lastname']) || ($alldata['sb_address'] <> $alldata['b_address']) || ($alldata['sc_address'] <> $alldata['c_address']) || ($alldata['sb_zipcode'] <> $alldata['b_zipcode']) || ($alldata['sb_country'] <> $alldata['b_country']) || ($alldata['sb_state'] <> $alldata['b_state']) || ($alldata['sb_city'] <> $alldata['b_city'])
-        //|| ($companyname<>$alldata['company'])
-            )) {
-            
-            if ($userid == 0) {
-                $idp = $onetime_customer_code_prefix . $id . '.P';
-                echo $id . ';' . $idp . ";" . $shipping . ";" . $handling . ";0;" . $hmera . ";" . $comment2 . ";;;;" . $onetime_customer_code_prefix . $id . ";<br>\n";
-            } else {
-                $idp = $customer_code_prefix . $userid . '.P';
-                echo $id . ';' . $idp . ";" . $shipping . ";" . $handling . ";0;" . $hmera . ";" . $comment2 . ";;;;" . $customer_code_prefix . $userid . ";<br>\n";
-            }
-            
-        } else {
-            if ($userid == 0) {
-                echo $id . ';' . $onetime_customer_code_prefix . $id . ";" . $shipping . ";" . $handling . ";0;" . $hmera . ";" . $comment2 . ";;;;;<br>\n";
-            } else {
-                echo $id . ';' . $customer_code_prefix . $userid . ";" . $shipping . ";" . $handling . ";0;" . $hmera . ";" . $comment2 . ";;;;;<br>\n";
-            }
-            
-        }
-        
-    }
+	
+	
+	echo "ΚΩΔΙΚΟΣ ΠΑΡΑΓΓΕΛΙΑΣ;ΚΩΔΙΚΟΣ ΠΕΛΑΤΗ;ΚΟΣΤΟΣ ΜΕΤΑΦΟΡΙΚΩΝ;ΚΟΣΤΟΣ ΑΝΤΙΚΑΤΑΒΟΛΗΣ;ΕΚΠΤΩΣΗ;ΗΜΕΡΟΜΗΝΙΑ;ΣΧΟΛΙΟ;ΧΡΗΣΤΗΣ;VOUCHER;ΚΑΤΑΣΤΑΣΗ;ΚΩΔΙΚΟΣ ΠΕΛΑΤΗ ΑΠΟΣΤΟΛΗΣ;<br>\n";
+	
+	while ($alldata = mysqli_fetch_array($data)) {
+		$id             = $alldata['order_id'];
+		$userid         = $alldata['user_id'];
+		//$hmera=gmdate("d/m/Y H:i:s", $alldata['timestamp'] + 3600*($timezone+date("I")));
+		$hmera          = $alldata['timestamp'];
+		$shipping       = str_replace('€', '', $alldata['shipping']);
+		$shipping       = str_replace('.', ',', $shipping);
+		$shipping_title = $alldata['shipping_title'];
+		$comment        = $alldata['comment'];
+		//	$handling=   str_replace('€','',       $alldata['handling']);
+		//$handling=   str_replace('.',',',       $handling);
+		$handling       = $alldata['handling'];
+		$handling       = 0;
+		$shipping_code  = $alldata['shipping_code'];
+		
+		if (($handling == 'cod') and ($shipping_code == 'total_based.total_based_0')) {
+			$handling = 0.001;
+		}
+		
+		$handling_title = $alldata['handling_title'];
+		
+		//$comment2=$shipping_title." ".$handling_title." "/*.$alldata['custgroup']*/." ".$comment;
+		$comment2 = $comment;
+		$comment2 = str_ireplace("&amp;", "&", $comment2);
+		$comment2 = str_ireplace("&quot;", "'", $comment2);
+		$comment2 = str_ireplace("&#039;", "'", $comment2);
+		$comment2 = str_ireplace("'", "`", $comment2);
+		$comment2 = str_ireplace("\n", " ", $comment2);
+		$comment2 = str_ireplace("<br>", " ", $comment2);
+		
+		$idp = '';
+		// NEW CUSTOMER FOR PAYMENT
+		
+		
+		// NEW CUSTOMER FOR PAYMENT
+		if (($alldata['sb_address']) && (($alldata['lastname'] <> $alldata['lastname']) || ($alldata['sb_address'] <> $alldata['b_address']) || ($alldata['sc_address'] <> $alldata['c_address']) || ($alldata['sb_zipcode'] <> $alldata['b_zipcode']) || ($alldata['sb_country'] <> $alldata['b_country']) || ($alldata['sb_state'] <> $alldata['b_state']) || ($alldata['sb_city'] <> $alldata['b_city'])
+					//|| ($companyname<>$alldata['company'])
+					)) {
+			
+			if ($userid == 0) {
+				$idp = $onetime_customer_code_prefix . $id . '.P';
+				echo $id . ';' . $idp . ";" . $shipping . ";" . $handling . ";0;" . $hmera . ";" . $comment2 . ";;;;" . $onetime_customer_code_prefix . $id . ";<br>\n";
+			} else {
+				$idp = $customer_code_prefix . $userid . '.P';
+				echo $id . ';' . $idp . ";" . $shipping . ";" . $handling . ";0;" . $hmera . ";" . $comment2 . ";;;;" . $customer_code_prefix . $userid . ";<br>\n";
+			}
+			
+		} else {
+			if ($userid == 0) {
+				echo $id . ';' . $onetime_customer_code_prefix . $id . ";" . $shipping . ";" . $handling . ";0;" . $hmera . ";" . $comment2 . ";;;;;<br>\n";
+			} else {
+				echo $id . ';' . $customer_code_prefix . $userid . ";" . $shipping . ";" . $handling . ";0;" . $hmera . ";" . $comment2 . ";;;;;<br>\n";
+			}
+			
+		}
+		
+	}
 }
 
 if ($action == 'order') {
-    ////order
-    $data = mysqli_query($link, "
+	////order
+	$data = mysqli_query($link, "
 		SELECT
 		ord.order_id as order_id,
 		ord.name as product,
@@ -625,136 +625,136 @@ if ($action == 'order') {
 		left join " . $dbprefix . "product as pro on pro.product_id=ord.product_id
 		
 		where ord.order_id=" . $orderid) or die(mysql_error());
-    
-    echo "ΚΩΔΙΚΟΣ;ΠΕΡΙΓΡΑΦΗ1;ΠΕΡΙΓΡΑΦΗ2;ΠΕΡΙΓΡΑΦΗ3;ΠΟΣΟΤΗΤΑ;ΜΟΝΑΔΑ;ΤΙΜΗ;ΦΠΑ;ΕΚΠΤΩΣΗ;<br>\n";
-    
-    while ($alldata = mysqli_fetch_array($data)) {
-        $description      = $alldata['product'];
-        $product_id       = $alldata['product_code'];
-        $product_quantity = $alldata['amount'];
-        $amount           = number_format($alldata['price'] / $product_quantity, 2, ',', '');
-        //$discount=number_format($alldata['percentage_discount'], 2, ',', '');
-        $discount         = 0;
-        
-        //$taxrate=number_format($alldata['rate_value'], 2, ',', '');
-        $taxrate = 24;
-        
-        $monada            = $measurement;
-        $product_attribute = $alldata['extra'];
-        
-        echo $product_code_prefix . $product_id . ';' . $description . ';;;' . $product_quantity . ';' . $monada . ';' . $amount . ';' . $taxrate . ';' . $discount . ";<br>\n";
-        
-        ////split prostheta
-        
-        
-        /*$datap = mysqli_query($link,"
-        SELECT
-        ord.order_id as order_id,
-        concat(ord.name,':',ord.value) as product,
-        '".$addonid."' as product_code,
-        0 as price,
-        0 as rate_value,
-        1 as amount,
-        1000 as monada
-        FROM ".$dbprefix."order_option as ord
-        left join ".$dbprefix."order_product as pord on pord.order_product_id=ord.order_product_id
-        
-        where ord.order_id=".$orderid." and pord.product_id=".$alldata['product_id']
-        
-        ."
-        group by product_option_value_id
-        order by order_option_id asc
-        "
-        
-        
-        
-        
-        
-        
-        ) or die(mysqli_error($link));
-        
-        
-        
-        //echo $alldata['product_id'].'###';
-        while($alldatap = mysqli_fetch_array( $datap ))
-        {
-        $description = $alldatap['product'];
-        $product_id = $alldatap['product_code'];
-        $product_quantity = $alldatap['amount'];
-        $amount=number_format($alldatap['price']/$product_quantity, 2, ',', '');
-        $discount=0;
-        
-        //$taxrate=number_format($alldatap['rate_value'], 2, ',', '');
-        $taxrate=24;
-        
-        $monada = $measurementaddon;
-        $product_attribute = $alldatap['extra'];
-        
-        
-        
-        echo $product_code_prefix.$product_id.';'.$description.';;;'.$product_quantity.';'.$monada.';'.$amount.';'.$taxrate.';'.$discount.";<br>\n";
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        }
-        
-        
-        
-        
-        
-        */
-        
-    }
-    
+	
+	echo "ΚΩΔΙΚΟΣ;ΠΕΡΙΓΡΑΦΗ1;ΠΕΡΙΓΡΑΦΗ2;ΠΕΡΙΓΡΑΦΗ3;ΠΟΣΟΤΗΤΑ;ΜΟΝΑΔΑ;ΤΙΜΗ;ΦΠΑ;ΕΚΠΤΩΣΗ;<br>\n";
+	
+	while ($alldata = mysqli_fetch_array($data)) {
+		$description      = $alldata['product'];
+		$product_id       = $alldata['product_code'];
+		$product_quantity = $alldata['amount'];
+		$amount           = number_format($alldata['price'] / $product_quantity, 2, ',', '');
+		//$discount=number_format($alldata['percentage_discount'], 2, ',', '');
+		$discount         = 0;
+		
+		//$taxrate=number_format($alldata['rate_value'], 2, ',', '');
+		$taxrate = 24;
+		
+		$monada            = $measurement;
+		$product_attribute = $alldata['extra'];
+		
+		echo $product_code_prefix . $product_id . ';' . $description . ';;;' . $product_quantity . ';' . $monada . ';' . $amount . ';' . $taxrate . ';' . $discount . ";<br>\n";
+		
+		////split prostheta
+		
+		
+		/*$datap = mysqli_query($link,"
+		SELECT
+		ord.order_id as order_id,
+		concat(ord.name,':',ord.value) as product,
+		'".$addonid."' as product_code,
+		0 as price,
+		0 as rate_value,
+		1 as amount,
+		1000 as monada
+		FROM ".$dbprefix."order_option as ord
+		left join ".$dbprefix."order_product as pord on pord.order_product_id=ord.order_product_id
+		
+		where ord.order_id=".$orderid." and pord.product_id=".$alldata['product_id']
+		
+		."
+		group by product_option_value_id
+		order by order_option_id asc
+		"
+		
+		
+		
+		
+		
+		
+		) or die(mysqli_error($link));
+		
+		
+		
+		//echo $alldata['product_id'].'###';
+		while($alldatap = mysqli_fetch_array( $datap ))
+		{
+		$description = $alldatap['product'];
+		$product_id = $alldatap['product_code'];
+		$product_quantity = $alldatap['amount'];
+		$amount=number_format($alldatap['price']/$product_quantity, 2, ',', '');
+		$discount=0;
+		
+		//$taxrate=number_format($alldatap['rate_value'], 2, ',', '');
+		$taxrate=24;
+		
+		$monada = $measurementaddon;
+		$product_attribute = $alldatap['extra'];
+		
+		
+		
+		echo $product_code_prefix.$product_id.';'.$description.';;;'.$product_quantity.';'.$monada.';'.$amount.';'.$taxrate.';'.$discount.";<br>\n";
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		}
+		
+		
+		
+		
+		
+		*/
+		
+	}
+	
 }
 
 if ($action == 'confirmorder') {
-    
-    //	$data = mysqli_query($link,"update ".$dbprefix."order set order_status_id=18 where order_id in (".$orderid.")") or die(mysqli_error($link));
-    //	echo $hmera;
-    
-    
-    $voucherno = $_REQUEST['voucherno'];
-    $shipcomp  = $_REQUEST['shipcomp'];
-    $docid     = $_REQUEST['docid'];
-    
-    $data = mysqli_query($link, "update " . $dbprefix . "order set order_status_id=18 where order_id in (" . $orderid . ")") or die(mysqli_error($link));
-    
-    if ($docid == 123) {
+	
+	//	$data = mysqli_query($link,"update ".$dbprefix."order set order_status_id=18 where order_id in (".$orderid.")") or die(mysqli_error($link));
+	//	echo $hmera;
+	
+	
+	$voucherno = $_REQUEST['voucherno'];
+	$shipcomp  = $_REQUEST['shipcomp'];
+	$docid     = $_REQUEST['docid'];
+	
+	$data = mysqli_query($link, "update " . $dbprefix . "order set order_status_id=18 where order_id in (" . $orderid . ")") or die(mysqli_error($link));
+	
+	if ($docid == 123) {
 		
-        $message = $voucherno;
+		$message = $voucherno;
 		$data = mysqli_query($link, "INSERT INTO " . $dbprefix . "order_history (`order_id`, `order_status_id`, `notify`, `comment`, `date_added`) VALUES (" . $orderid . ", '18', '0', '$message', DATE_ADD(NOW(), INTERVAL 1 HOUR))") or die(mysqli_error($link));
 		
-    } else {        
+	} else {        
 
-    }
-       
-    echo $hmera;
-    
-    mysqli_close($link);
-    
+	}
+	
+	echo $hmera;
+	
+	mysqli_close($link);
+	
 }
 
 if ($action == 'updatestock') {
-    $optvalid = '';
-    //where concat(pro.model,rel.model)='".substr($productid,strlen($product_code_prefix))."'
-    $data = mysqli_query($link, "
+	$optvalid = '';
+	//where concat(pro.model,rel.model)='".substr($productid,strlen($product_code_prefix))."'
+	$data = mysqli_query($link, "
 		
 		select rel.relatedoptions_id, rel.product_id
 		
@@ -768,24 +768,24 @@ if ($action == 'updatestock') {
 		
 		
 		") or die(mysqli_error($link));
-    
-    $id     = '';
-    $prodid = '';
-    while ($alldata = mysqli_fetch_array($data)) {
-        $id       = $alldata['relatedoptions_id'];
-        $prodid   = $alldata['product_id'];
-        $optvalid = $alldata['optvalid'];
-    }
-    
-    if ($id) {
-        
-        $data = mysqli_query($link, "
+	
+	$id     = '';
+	$prodid = '';
+	while ($alldata = mysqli_fetch_array($data)) {
+		$id       = $alldata['relatedoptions_id'];
+		$prodid   = $alldata['product_id'];
+		$optvalid = $alldata['optvalid'];
+	}
+	
+	if ($id) {
+		
+		$data = mysqli_query($link, "
 			
 			update " . $dbprefix . "relatedoptions set quantity=" . $stock . " where relatedoptions_id=" . $id . "
 			
 			") or die(mysqli_error($link));
-        
-        $query = "
+		
+		$query = "
 			update " . $dbprefix . "product set quantity=
 			
 			
@@ -804,383 +804,568 @@ if ($action == 'updatestock') {
 			where product_id='" . $prodid . "'
 			
 			";
-        //echo $query;
-        $data = mysqli_query($link, $query) or die(mysqli_error($link));
-        
-    }
-    
-    /////////////////////////////////////////update standard options stock
-    /////////////////////////////////////////
-    
-    
-    if (($optvalid) && ($prodid)) {
-        $data = mysqli_query($link, "
+		//echo $query;
+		$data = mysqli_query($link, $query) or die(mysqli_error($link));
+		
+	}
+	
+	/////////////////////////////////////////update standard options stock
+	/////////////////////////////////////////
+	
+	
+	if (($optvalid) && ($prodid)) {
+		$data = mysqli_query($link, "
 			
 			update " . $dbprefix . "product_option_value poov
 			set poov.quantity=" . $stock . " where poov.option_value_id=" . $optvalid . " and poov.product_id=" . $prodid) or die(mysqli_error($link));
-        
-    }
-    
-    //$data = mysql_query("update ".$dbprefix."product set quantity=".$stock."  where model='".substr($productid,strlen($product_code_prefix))."'") or die(mysql_error());
-    
-    
-    echo $hmera;
-    
-    echo 'ok';
-    echo $hmera;
+		
+	}
+	
+	//$data = mysql_query("update ".$dbprefix."product set quantity=".$stock."  where model='".substr($productid,strlen($product_code_prefix))."'") or die(mysql_error());
+	
+	
+	echo $hmera;
+	
+	echo 'ok';
+	echo $hmera;
 }
 
 if ($action == 'cancelorder') {
-    
-    $data = mysqli_query($link, "update " . $dbprefix . "order set order_status_id=7 where order_id in (" . $orderid . ")") or die(mysqli_error($link));
-    
-    echo $hmera;
-    
+	
+	$data = mysqli_query($link, "update " . $dbprefix . "order set order_status_id=7 where order_id in (" . $orderid . ")") or die(mysqli_error($link));
+	
+	echo $hmera;
+	
 }
 
 //header("Location: $goto?expdate=$nextduedate");
 
 
 if ($action == 'redirect') {
-    
-    //customer_code_prefix
-    
-    
-    // EDIT PRODUCT
-    if ($productid) {
-        $data = mysqli_query($link, "
+	
+	//customer_code_prefix
+	
+	
+	// EDIT PRODUCT
+	if ($productid) {
+		$data = mysqli_query($link, "
 			SELECT * FROM " . $dbprefix . "product WHERE model = '" . $productid . "'
 			") or die(mysqli_error($link));
-        
-        //echo mysql_num_rows($data);
-        if (mysql_num_rows($data) <> 0) {
-            //GET PRODCUT ID
-            while ($alldata = mysqli_fetch_array($data)) {
-                $id = $alldata['product_id'];
-                break;
-            }
-            
-            session_start();
-            header('Location: ' . "admin/index.php?route=catalog/product/update&token=" . $_SESSION['token'] . "&product_id=" . $id);
-        }
-    }
-    
-    // EDIT CUSTOMER
-    if ($customerid) {
-        //customer_code_prefix
-        $customerid = str_replace($customer_code_prefix, '', $customerid);
-        session_start();
-        header('Location: ' . "admin/index.php?route=sale/customer/update&token=" . $_SESSION['token'] . "&customer_id=" . $customerid);
-        
-    }
-    
-    // EDIT ORDER
-    if ($orderid) {
-        $orderid = str_replace($relatedchar, '', $orderid);
-        session_start();
-        header('Location: ' . "admin/index.php?route=sale/order/info&token=" . $_SESSION['token'] . "&order_id=" . $orderid);
-        
-    }
-    
+		
+		//echo mysql_num_rows($data);
+		if (mysql_num_rows($data) <> 0) {
+			//GET PRODCUT ID
+			while ($alldata = mysqli_fetch_array($data)) {
+				$id = $alldata['product_id'];
+				break;
+			}
+			
+			session_start();
+			header('Location: ' . "admin/index.php?route=catalog/product/update&token=" . $_SESSION['token'] . "&product_id=" . $id);
+		}
+	}
+	
+	// EDIT CUSTOMER
+	if ($customerid) {
+		//customer_code_prefix
+		$customerid = str_replace($customer_code_prefix, '', $customerid);
+		session_start();
+		header('Location: ' . "admin/index.php?route=sale/customer/update&token=" . $_SESSION['token'] . "&customer_id=" . $customerid);
+		
+	}
+	
+	// EDIT ORDER
+	if ($orderid) {
+		$orderid = str_replace($relatedchar, '', $orderid);
+		session_start();
+		header('Location: ' . "admin/index.php?route=sale/order/info&token=" . $_SESSION['token'] . "&order_id=" . $orderid);
+		
+	}
+	
 }
 
+
+
+
+
+
+
+
+
+
+
+
 if ($action == 'uploadproduct') {
-    
-    ///
-    //FIX PRODUCT_ID FROM ENCODING
-    /*
-    for($i=0, $len=strlen($productid); $i<$len; $i+=4){
-    $productidf=$productidf. base64_decode( substr($productid, $i, 4) );
-    }
-    $productid=$productidf;*/
-    ///
-    //$len=$_REQUEST['len'];
-    $pieces = explode("|", $productid);
-    
-    //$productid = substr(base_enc($pieces[1]),0,$pieces[0]);
-    //$productid2 = substr(base_enc($pieces[1]),0,$pieces[0]);
-    $productid = trim(base_enc($pieces[1]));
-    //$productid = substr(base64_decode($productid),0,$len);
-    
-    
-    $title = base_enc($_REQUEST['title']);
-    $descr = base_enc($_REQUEST['descr']);
-    
-    $price  = $_REQUEST['price'];
-    $cat    = $_REQUEST['cat'] + 100000;
-    $subcat = $_REQUEST['subcat'];
-    $tax    = $_REQUEST['tax'];
-    
-    $cattitle    = trim(base_enc($_REQUEST['cattitle']));
-    $subcattitle = trim(base_enc($_REQUEST['subcattitle']));
-    
-    $logtext = $pieces[0] . '|' . $productid . '|' . $title . '|' . $descr . '|' . $price . '|' . $cat . '|' . $subcat . '|' . $tax . '|' . $cattitle . '|' . $subcattitle . "\n";
-    file_put_contents($logfile, $logtext, FILE_APPEND | LOCK_EX);
-    
-    //
-    //CHECK IF TAX EXISTS ELSE ADD
-    $data = mysql_query("
-		select * from " . $dbprefix . "tax_rule as tru
-		left join " . $dbprefix . "tax_rate as tra on tru.tax_rate_id=tra.tax_rate_id
-		left join " . $dbprefix . "tax_class as tcl on  tru.tax_class_id=tcl.tax_class_id
+	
+	
+	
+	//file_put_contents($logfile, 'ok', FILE_APPEND | LOCK_EX);
+	
+	$title=$_REQUEST['title'];
+	$descr=$_REQUEST['descr'];    	
+	$price=$_REQUEST['price'];
+	$cat=$_REQUEST['cat']+100000;
+	$subcat=$_REQUEST['subcat'];
+	$tax=$_REQUEST['tax'];
+	//$price=($price *100)/(100+$tax);
+	
+	$price=round($price, 4);	
+	
+	
+	
+	$cattitle=trim($_REQUEST['cattitle']);      
+	$subcattitle=trim($_REQUEST['subcattitle']);      
+	
+	
+	$descr=explode('|',$descr)[0];
+	
+	
+	$logtext='|'.$productid.'|'.$title.'|#'.$descr.'#|'.$price.'|'.$cat.'|'.$subcat.'|'.$tax.'|'.$cattitle.'|'.$subcattitle."\n";
+	file_put_contents($logfile, $logtext, FILE_APPEND | LOCK_EX);
+	
+	
+	
+	
+	
+	
+
+
+	
+	
+	
+	
+	
+	//
+	//CHECK IF TAX EXISTS ELSE ADD
+	$query="
+		select * from ".$dbprefix."tax_rule as tru
+		left join ".$dbprefix."tax_rate as tra on tru.tax_rate_id=tra.tax_rate_id
+		left join ".$dbprefix."tax_class as tcl on  tru.tax_class_id=tcl.tax_class_id
 		
-		where title='EMDI $tax'
+		where rate=$tax
 		
-		") or die(mysqli_error($link));
-    
-    if (mysqli_num_rows($link, $data) == 0) {
-        
-        //ADD DEFAULT EMDI TAX CLASS IF DOESN'T EXIST
-        $data = mysqli_query($link, "
-			INSERT INTO " . $dbprefix . "tax_class (tax_class_id, title, description, date_added, date_modified) 
+		";
+	$data = mysqli_query($link,$query) or die(mysqli_error());
+	
+	
+
+	//$logtext="before_update";
+	//file_put_contents($logfile, $query, FILE_APPEND | LOCK_EX);
+	
+	
+	if (mysqli_num_rows($data)==0) {
+		
+		//ADD DEFAULT EMDI TAX CLASS IF DOESN'T EXIST
+		$data = mysqli_query($link,"
+			INSERT INTO ".$dbprefix."tax_class (tax_class_id, title, description, date_added, date_modified) 
 			VALUES (NULL, 'EMDI $tax', 'EMDI $tax', now(), '0000-00-00 00:00:00');
-			") or die(mysqli_error($link));
-        
-        //GET CLASS ID
-        $data = mysqli_query($link, "SELECT LAST_INSERT_ID() as id") or die(mysqli_error($link));
-        while ($alldata = mysqli_fetch_array($data)) {
-            $classid = $alldata['id'];
-            break;
-        }
-        
-        //ADD TAX
-        $data = mysqli_query($link, "
-			INSERT INTO " . $dbprefix . "tax_rate (tax_rate_id, geo_zone_id, name, rate, type, date_added, date_modified) 
+			") or die(mysqli_error());			
+		
+		
+		//GET CLASS ID
+		$data = mysqli_query($link,"SELECT LAST_INSERT_ID() as id") or die(mysqli_error());
+		
+		while($alldata = mysqli_fetch_array( $data ))
+		{
+			$classid=$alldata['id'];  	 	
+			break;		
+		}	
+		
+		//ADD TAX	
+		$data = mysqli_query($link,"
+			INSERT INTO ".$dbprefix."tax_rate (tax_rate_id, geo_zone_id, name, rate, type, date_added, date_modified) 
 			VALUES (NULL, '0', '$tax%', '$tax', 'P', now(), '0000-00-00 00:00:00');
-			") or die(mysqli_error($link));
-        
-        //GET TAX ID
-        $data = mysqli_query($link, "SELECT LAST_INSERT_ID() as id") or die(mysqli_error($link));
-        while ($alldata = mysqli_fetch_array($data)) {
-            $taxid = $alldata['id'];
-            break;
-        }
-        
-        //ADD RULE
-        $data = mysqli_query($link, "
-			INSERT INTO " . $dbprefix . "tax_rule (tax_rule_id, tax_class_id, tax_rate_id, based, priority) 
+			") or die(mysqli_error());			
+		
+		
+		//GET TAX ID
+		$data = mysqli_query($link,"SELECT LAST_INSERT_ID() as id") or die(mysqli_error());					
+		while($alldata = mysqli_fetch_array( $data ))
+		{
+			$taxid=$alldata['id'];  	 	
+			break;		
+		}	
+		
+		//ADD RULE
+		$data = mysqli_query($link,"
+			INSERT INTO ".$dbprefix."tax_rule (tax_rule_id, tax_class_id, tax_rate_id, based, priority) 
 			VALUES (NULL, '$classid', '$taxid', 'payment', '1');
-			") or die(mysqli_error($link));
-        
-    } else {
-        //GET TAX CLASS IF DOESN'T EXIST
-        while ($alldata = mysqli_fetch_array($data)) {
-            $classid = $alldata['tax_class_id'];
-            break;
-        }
-    }
-    //
-    
-    
-    // CREATE CATEGORY IF DOES NOT EXIST
-    $data = mysqli_query($link, "
-		SELECT * FROM " . $dbprefix . "category WHERE category_id=$cat
-		") or die(mysqli_error($link));
-    if (mysqli_num_rows($link, $data) == 0) {
-        
-        $data = mysqli_query($link, "
-			INSERT INTO " . $dbprefix . "category (category_id, image, parent_id, top, " . $dbprefix . "category.column, sort_order, status, date_added, date_modified) 
+			") or die(mysqli_error());			
+		
+		
+	} else {
+		//file_put_contents($logfile, '$$$$'.$classid.'$$$$', FILE_APPEND | LOCK_EX);			
+		//GET TAX CLASS IF DOESN'T EXIST
+		
+		while($alldata = mysqli_fetch_array( $data ))
+		{
+			$classid=$alldata['tax_class_id'];  	
+			break;		
+		}	
+	}
+	//
+	
+	
+	
+	
+	// file_put_contents($logfile, '#qq#'.$query.'&&'.$classid.'##', FILE_APPEND | LOCK_EX);
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	// CREATE CATEGORY IF DOES NOT EXIST
+	$data = mysqli_query($link,"
+		SELECT * FROM ".$dbprefix."category WHERE category_id=$cat
+		") or die(mysqli_error());
+	if (mysqli_num_rows($data)==0) {
+		
+		
+		
+		
+		$data = mysqli_query($link,"
+			INSERT INTO ".$dbprefix."category (category_id, image, parent_id, top, ".$dbprefix."category.column, sort_order, status, date_added, date_modified) 
 			VALUES 
 			('$cat', NULL, '0', '0', '0', '0', '1', now(), '0000-00-00 00:00:00');
-			") or die(mysqli_error($link));
-        
-        //ADD CATEGORY DESCRIPTION
-        $data = mysqli_query($link, "
-			INSERT INTO " . $dbprefix . "category_description (category_id, language_id, name, description, meta_description, meta_keyword) 
+			") or die(mysqli_error());			
+		
+		//ADD CATEGORY DESCRIPTION
+		
+		//FOR ALL LANGUAGES    
+		for ($lang_id = 1; $lang_id <= 3; $lang_id+=2) {
+			
+			$data = mysqli_query($link,"
+			INSERT INTO ".$dbprefix."category_description (category_id, language_id, name, description, meta_description, meta_keyword) 
 			VALUES ('$cat', '$lang_id', '$cattitle', '', '', '');	
-			") or die(mysqli_error($link));
-        
-        //ADD CATEGORY STORE
-        $data = mysqli_query($link, "
-			INSERT INTO " . $dbprefix . "category_to_store (category_id, store_id) 
+			") or die(mysqli_error());			
+			
+		}
+		
+		
+		
+		//ADD CATEGORY STORE
+		$data = mysqli_query($link,"
+			INSERT INTO ".$dbprefix."category_to_store (category_id, store_id) 
 			VALUES ('$cat', '$store_id');
-			") or die(mysqli_error($link));
-        
-        //ADD CATEGORY PATH
-        $data = mysqli_query($link, "
-			INSERT INTO " . $dbprefix . "category_path (category_id ,path_id ,level) 
+			") or die(mysqli_error());			
+		
+		
+		//ADD CATEGORY PATH
+		$data = mysqli_query($link,"
+			INSERT INTO ".$dbprefix."category_path (category_id ,path_id ,level) 
 			VALUES ('$cat', '$cat', '0')
-			") or die(mysqli_error($link));
-        
-    }
-    //
-    
-    
-    if ($subcat) {
-        
-        // CREATE SUBCATEGORY IF DOES NOT EXIST
-        $data = mysqli_query($link, "
-			SELECT * FROM " . $dbprefix . "category WHERE category_id=$subcat
-			") or die(mysqli_error($link));
-        if (mysqli_num_rows($link, $data) == 0) {
-            
-            $data = mysqli_query($link, "
-				INSERT INTO " . $dbprefix . "category (category_id, image, parent_id, top, " . $dbprefix . "category.column, sort_order, status, date_added, date_modified) 
-				VALUES 
-				('$subcat', NULL, '$cat', '0', '0', '0', '1', now(), '0000-00-00 00:00:00');
-				") or die(mysqli_error($link));
-            
-            //ADD SUBCATEGORY DESCRIPTION
-            $data = mysqli_query($link, "
-				INSERT INTO " . $dbprefix . "category_description (category_id, language_id, name, description, meta_description, meta_keyword) 
-				VALUES ('$subcat', '$lang_id', '$subcattitle', '', '', '');	
-				") or die(mysqli_error($link));
-            
-            //ADD SUBCATEGORY STORE
-            $data = mysqli_query($link, "
-				INSERT INTO " . $dbprefix . "category_to_store (category_id, store_id) 
-				VALUES ('$subcat', '$store_id');
-				") or die(mysqli_error($link));
-            
-            //ADD SUBCATEGORY CATEGORY PATH
-            $data = mysqli_query($link, "
-				INSERT INTO " . $dbprefix . "category_path (category_id ,path_id ,level) 
-				VALUES ('$subcat', '$cat', '1')
-				") or die(mysqli_error($link));
-            
-            //ADD SUBCATEGORY  PATH
-            $data = mysqli_query($link, "
-				INSERT INTO " . $dbprefix . "category_path (category_id ,path_id ,level) 
-				VALUES ('$subcat', '$subcat', '2')
-				") or die(mysqli_error($link));
-            
-        }
-        //
-        
-    }
-    
-    $logtext = $_FILES["file"]["name"] . "\n";
-    file_put_contents($logfile, $logtext, FILE_APPEND | LOCK_EX);
-    
-    // UPLOAD AND REPLACE PHOTO
-    $uploadfolder = getcwd() . '/image/data/';
-    
-    $allowedExts = array(
-        "gif",
-        "jpeg",
-        "jpg",
-        "png"
-    );
-    $temp        = explode(".", $_FILES["file"]["name"]);
-    $extension   = end($temp);
-    
-    if ((($_FILES["file"]["type"] == "image/gif") || ($_FILES["file"]["type"] == "image/jpeg") || ($_FILES["file"]["type"] == "image/jpg") || ($_FILES["file"]["type"] == "image/pjpeg") || ($_FILES["file"]["type"] == "image/x-png") || ($_FILES["file"]["type"] == "image/png"))
-    //&& ($_FILES["file"]["size"] < 1000000)
-        
-    //&& in_array($extension, $allowedExts)
-        ) {
-        if ($_FILES["file"]["error"] > 0) {
-            
-            echo "Return Code: " . $_FILES["file"]["error"] . "<br>";
-            
-        } else {
-            
-            move_uploaded_file($_FILES["file"]["tmp_name"], $uploadfolder . $_FILES["file"]["name"]);
-            
-        }
-    } else {
-        echo "Invalid file";
-    }
-    //
-    
-    
-    // ADD PRODUCT
-    $data = mysqli_query($link, "
-		SELECT * FROM " . $dbprefix . "product WHERE model = '" . $productid . "'
-		") or die(mysqli_error($link));
-    if (mysqli_num_rows($link, $data) == 0) {
-        
-        //IF PRODUCT DOES NOT EXIST
-        $data = mysqli_query($link, "				
-			INSERT INTO " . $dbprefix . "product (product_id, model, sku, upc, ean, jan, isbn, mpn, location, quantity, 
+			") or die(mysqli_error());			
+		
+		
+		
+		
+		
+	}
+	//
+	
+	
+	
+	
+	
+	
+	
+	
+	// CREATE SUBCATEGORY IF DOES NOT EXIST
+	$data = mysqli_query($link,"
+		SELECT * FROM ".$dbprefix."category WHERE category_id=$subcat
+		") or die(mysqli_error());
+	if (mysqli_num_rows($data)==0) {
+		
+		
+		
+		
+		$data = mysqli_query($link,"
+			INSERT INTO ".$dbprefix."category (category_id, image, parent_id, top, ".$dbprefix."category.column, sort_order, status, date_added, date_modified) 
+			VALUES 
+			('$subcat', NULL, '$cat', '0', '0', '0', '1', now(), '0000-00-00 00:00:00');
+			") or die(mysqli_error());			
+		
+		
+		//ADD SUBCATEGORY DESCRIPTION
+		
+		//FOR ALL LANGUAGES
+		for ($lang_id = 1; $lang_id <= 3; $lang_id++) {
+			
+			
+			$data = mysqli_query($link,"
+			INSERT INTO ".$dbprefix."category_description (category_id, language_id, name, description, meta_description, meta_keyword) 
+			VALUES ('$subcat', '$lang_id', '$subcattitle', '', '', '');	
+			") or die(mysqli_error());			
+			
+		}
+		
+		//ADD SUBCATEGORY STORE
+		$data = mysqli_query($link,"
+			INSERT INTO ".$dbprefix."category_to_store (category_id, store_id) 
+			VALUES ('$subcat', '$store_id');
+			") or die(mysqli_error());			
+		
+		
+		//ADD SUBCATEGORY CATEGORY PATH
+		$data = mysqli_query($link,"
+			INSERT INTO ".$dbprefix."category_path (category_id ,path_id ,level) 
+			VALUES ('$subcat', '$cat', '1')
+			") or die(mysqli_error());			
+		
+		//ADD SUBCATEGORY  PATH 
+		$data = mysqli_query($link,"
+			INSERT INTO ".$dbprefix."category_path (category_id ,path_id ,level) 
+			VALUES ('$subcat', '$subcat', '2')
+			") or die(mysqli_error());			
+		
+		
+		
+		
+	}
+	//
+	
+	
+	
+	
+	
+	
+	
+	
+	$logtext=$_FILES["file"]["name"]."\n";
+	
+	//file_put_contents($logfile,'>>'. $logtext, FILE_APPEND | LOCK_EX);	
+	
+	
+	// UPLOAD AND REPLACE PHOTO
+	$uploadfolder=getcwd().'/image/data/';
+	$photo_filename1='';
+	
+	$allowedExts = array("gif", "jpeg", "jpg", "png");
+	$temp = explode(".", $_FILES["file"]["name"]);
+	$extension = end($temp);
+	
+	if ((($_FILES["file"]["type"] == "image/gif")
+				|| ($_FILES["file"]["type"] == "image/jpeg")
+				|| ($_FILES["file"]["type"] == "image/jpg")
+				|| ($_FILES["file"]["type"] == "image/pjpeg")
+				|| ($_FILES["file"]["type"] == "image/x-png")
+				|| ($_FILES["file"]["type"] == "image/png"))
+			//&& ($_FILES["file"]["size"] < 1000000)
+			//&& in_array($extension, $allowedExts)
+			) 
+	{
+		if ($_FILES["file"]["error"] > 0) {
+			
+			echo "Return Code: " . $_FILES["file"]["error"] . "<br>";
+			
+		} else {
+			
+			move_uploaded_file($_FILES["file"]["tmp_name"],$uploadfolder.$_FILES["file"]["name"]);
+			$photo_filename1='data/'.$_FILES["file"]["name"];
+			
+		}
+	} else {
+		echo "Invalid file";
+	}
+	//
+	
+	// UPLOAD AND REPLACE PHOTO#2
+	$uploadfolder=getcwd().'/image/data/';
+	$photo_filename2='';
+	
+	$allowedExts = array("gif", "jpeg", "jpg", "png");
+	$temp = explode(".", $_FILES["file2"]["name"]);
+	$extension = end($temp);
+	
+	if ((($_FILES["file2"]["type"] == "image/gif")
+				|| ($_FILES["file2"]["type"] == "image/jpeg")
+				|| ($_FILES["file2"]["type"] == "image/jpg")
+				|| ($_FILES["file2"]["type"] == "image/pjpeg")
+				|| ($_FILES["file2"]["type"] == "image/x-png")
+				|| ($_FILES["file2"]["type"] == "image/png"))
+			//&& ($_FILES["file2"]["size"] < 1000000)
+			//&& in_array($extension, $allowedExts)
+			) 
+	{
+		if ($_FILES["file2"]["error"] > 0) {
+			
+			echo "Return Code: " . $_FILES["file2"]["error"] . "<br>";
+			
+		} else {
+			
+			move_uploaded_file($_FILES["file2"]["tmp_name"],$uploadfolder.$_FILES["file2"]["name"]);
+			$photo_filename2='data/'.$_FILES["file2"]["name"];
+			
+		}
+	} else {
+		echo "Invalid file2";
+	}
+	//
+	
+	//file_put_contents($logfile,'add@'. $productid."\n", FILE_APPEND | LOCK_EX);
+	
+	
+	
+	
+	
+	// ADD PRODUCT 
+	$data = mysqli_query($link,"
+		SELECT product_id FROM ".$dbprefix."product WHERE model = '".$productid."'
+		") or die(mysqli_error());
+	
+	
+	
+	
+	if (mysqli_num_rows($data)==0) {
+		
+		
+		$query="				
+			INSERT INTO ".$dbprefix."product ( model, sku, upc, ean, jan, isbn, mpn, location, quantity, 
 			stock_status_id, image, manufacturer_id, shipping, price, points, tax_class_id, date_available, weight, 
 			weight_class_id, length, width, height, length_class_id, subtract, minimum, sort_order, status, date_added, 
 			date_modified, viewed) 
 			VALUES (
-			NULL, '$productid', '', '', '', '', '', '', '', '0', '0', 'data/" . $_FILES["file"]["name"] . "', '0', '1', '$price', '0', '$classid', '10-10-2014', 
+			'$productid', '', '', '', '', '', '', '', '0', '0', '$photo_filename1', '0', '1', '$price', '0', '$classid', '2014-01-01', 
 			'0.00000000', 0, '0.00000000', '0.00000000', '0.00000000',
 			0, '1', '1', 0, 1, now(), '0000-00-00 00:00:00',0);				
 			
-			") or die(mysqli_error($link));
-        
-        //GET PRODCUT ID
-        $data = mysqli_query($link, "SELECT LAST_INSERT_ID() as id") or die(mysqli_error($link));
-        while ($alldata = mysqli_fetch_array($data)) {
-            $id = $alldata['id'];
-            break;
-        }
-        
-        //ADD ADDITIONAL IMAGE
-        /*
-        $data = mysql_query("
-        INSERT INTO ".$dbprefix."product_image (product_image_id, product_id, image, sort_order)
-        VALUES (NULL, '$id', 'data/".$_FILES["file"]["name"]."', '');
-        ") or die(mysql_error());
-        */
-        
-        //ADD DESCRIPTION
-        $data = mysqli_query($link, "
-			INSERT INTO " . $dbprefix . "product_description (product_id, language_id, name, 
-			description, meta_description, meta_keyword, tag) 
-			VALUES ('$id', '$lang_id', '$title', '$descr', '', '', '');
-			") or die(mysqli_error($link));
-        
-        //ADD CATEGORY
-        $data = mysqli_query($link, "
-			INSERT INTO " . $dbprefix . "product_to_category (product_id, category_id) 
+			";
+		
+		
+		
+		//IF PRODUCT DOES NOT EXIST			
+		$data = mysqli_query($link,$query) or die(mysqli_error());		
+		
+		//GET PRODCUT ID
+		$data = mysqli_query($link,"SELECT LAST_INSERT_ID() as id") or die(mysqli_error());					
+		while($alldata = mysqli_fetch_array( $data ))
+		{
+			$id=$alldata['id'];  	 	
+			break;		
+		}	
+		file_put_contents($logfile, $id."\n", FILE_APPEND | LOCK_EX);
+		
+		
+		//ADD ADDITIONAL IMAGE	
+		if ($photo_filename2) {
+			$data =mysqli_query($link,"
+				INSERT INTO ".$dbprefix."product_image (product_id, image) 
+				VALUES ('$id', '$photo_filename2');
+				") or die(mysqli_error());							
+		}
+		//file_put_contents($logfile, $query."#\n", FILE_APPEND | LOCK_EX);
+		
+		
+		//ADD DESCRIPTION       
+		
+		//FOR ALL LANGUAGES
+		for ($lang_id = 1; $lang_id <= 3; $lang_id++) {
+			
+			$query="
+			INSERT INTO ".$dbprefix."product_description (`product_id`, `language_id`, `name`, 
+			`description`, `meta_description`, `meta_keyword`, `meta_title`,`tag`) 
+			VALUES ('$id', '$lang_id', '$title', '$descr', '$descr', '$title', '$title', '$title');
+			";
+			file_put_contents($logfile,'#@@'. $query."#\n", FILE_APPEND | LOCK_EX);
+			$data = mysqli_query($link,$query) or die(mysqli_error());					
+			
+		}
+		
+		//ADD CATEGORY
+		$data = mysqli_query($link,"
+			INSERT INTO ".$dbprefix."product_to_category (product_id, category_id) 
 			VALUES ('$id', '$subcat');
-			") or die(mysqli_error($link));
-        
-        //ADD STORE
-        $data = mysqli_query($link, "
-			INSERT INTO " . $dbprefix . "product_to_store (product_id, store_id) 
+			") or die(mysqli_error());					
+		
+		
+		//ADD STORE                 
+		$data = mysqli_query($link,"
+			INSERT INTO ".$dbprefix."product_to_store (product_id, store_id) 
 			VALUES ('$id', '$store_id');
-			") or die(mysqli_error($link));
-        
-    } else {
-        //IF PRODUCT EXISTS UPDATE FIELDS
-        //GET TAX CLASS IF DOESN'T EXIST
-        while ($alldata = mysqli_fetch_array($data)) {
-            $id = $alldata['product_id'];
-            break;
-        }
-        /*
-        //UPDATE PRODUCT NO PHOTO!!!
-        $data = mysql_query("
-        update ".$dbprefix."product set price='$price', tax_class_id='$classid', date_modified=now()
-        where product_id=$id
-        ") or die(mysql_error());
-        
-        */
-        //UPDATE PRODUCT
-        $data = mysqli_query($link, "				
-			update " . $dbprefix . "product set image='data/" . $_FILES["file"]["name"] . "', price='$price', tax_class_id='$classid', date_modified=now()
+			") or die(mysqli_error());					
+		
+		
+		
+	} else {
+		//IF PRODUCT EXISTS UPDATE FIELDS
+		//GET TAX CLASS IF DOESN'T EXIST
+		while($alldata = mysqli_fetch_array( $data ))
+		{
+			$id=$alldata['product_id'];  	 	
+			break;		
+		}	
+		/*
+				//UPDATE PRODUCT NO PHOTO!!!
+				$data = mysql_query("				
+				update ".$dbprefix."product set price='$price', tax_class_id='$classid', date_modified=now()
+				where product_id=$id
+				") or die(mysql_error());				
+				
+			*/
+		//UPDATE PRODUCT
+		$data = mysqli_query($link,"				
+			update ".$dbprefix."product set image='$photo_filename1', price='$price', tax_class_id='$classid', date_modified=now()
 			where product_id=$id
-			") or die(mysqli_error($link));
-        
-        //UPDATE DESCRIPTION
-        $data = mysqli_query($link, "
-			update " . $dbprefix . "product_description set name='$title', description='$descr'
+			") or die(mysqli_error());			
+
+
+
+
+		//DELETE ADDITIONAL IMAGE	
+		$data =mysqli_query($link,"delete from ".$dbprefix."product_image 
+		WHERE product_id='$id' and image='$photo_filename2'") or die(mysqli_error());							
+
+
+		//ADD ADDITIONAL IMAGE	
+		$data =mysqli_query($link,"INSERT INTO ".$dbprefix."product_image (product_id, image) 
+		VALUES ('$id', '$photo_filename2')") or die(mysqli_error());							
+
+
+		
+		
+		//FOR ALL LANGUAGES
+		for ($lang_id = 1; $lang_id <= 3; $lang_id++) {
+			
+			//UPDATE DESCRIPTION       
+			$data = mysqli_query($link,"
+			update ".$dbprefix."product_description set `name`='$title', `description`='$descr',
+			`meta_description`='$descr', `meta_keyword`='$title', `meta_title`='$title'
+			where product_id=$id and language_id=$lang_id			
+			") or die(mysqli_error());				
+
+		}			
+		
+		
+		//ADD CATEGORY
+		$data = mysqli_query($link,"
+			update ".$dbprefix."product_to_category set category_id='$subcat'
 			where product_id=$id
-			") or die(mysqli_error($link));
-        
-        //ADD CATEGORY
-        $data = mysqli_query($link, "
-			update " . $dbprefix . "product_to_category set category_id='$subcat'
-			where product_id=$id
-			") or die(mysqli_error($link));
-        
-    }
-    
+			") or die(mysqli_error());					
+		
+		
+		
+	}
+	
+	
+	
+	
+
+	
+	
+	
+	
 }
 
-function base_enc($encoded)
-{
-    $result = '';
-    for ($i = 0, $len = strlen($encoded); $i < $len; $i += 4) {
-        $result = $result . base64_decode(substr($encoded, $i, 4));
-    }
-    return $result;
-}
+
+
+
+
 
 ?>
