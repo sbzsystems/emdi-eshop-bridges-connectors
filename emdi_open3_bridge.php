@@ -1,10 +1,10 @@
 <?php
 //PS
 /*------------------------------------------------------------------------
-		# EMDI - OPENCART 2 BRIDGE by SBZ systems - Solon Zenetzis - version 2.0
+		# EMDI - OPENCART 3 BRIDGE by SBZ systems - Solon Zenetzis - version 2.1
 		# ------------------------------------------------------------------------
 		# author    SBZ systems - Solon Zenetzis
-		# copyright Copyright (C) 2013-2017 sbzsystems.com. All Rights Reserved.
+		# copyright Copyright (C) 2013-2021 sbzsystems.com. All Rights Reserved.
 		# @license - http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL
 		# Websites: http://www.sbzsystems.com
 		# Technical Support:  Forum - http://www.sbzsystems.com
