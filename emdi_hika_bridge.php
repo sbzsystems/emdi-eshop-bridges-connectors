@@ -9,20 +9,22 @@
 		# Technical Support:  Forum - http://www.sbzsystems.com
 	-------------------------------------------------------------------------*/
 
+
 header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 header('Content-Type: text/html; charset=UTF-8');
-
-
 
 /* Initialize Joomla framework */
 define( '_JEXEC', 1 );
 define('JPATH_BASE', dirname(__FILE__) );
 define( 'DS', DIRECTORY_SEPARATOR );
+
 /* Required Files */
 require_once ( JPATH_BASE .DS.'includes'.DS.'defines.php' );
 require_once ( JPATH_BASE .DS.'includes'.DS.'framework.php' );
+
 /* To use Joomla's Database Class */
-require_once ( JPATH_BASE .DS.'libraries'.DS.'joomla'.DS.'factory.php' );
+require_once ( JPATH_BASE .DS.'libraries'.DS.'joomla'.DS.'platform.php' );
+
 /* Create the Application */
 $config = new JConfig();
 
@@ -42,29 +44,26 @@ $tmp_path = $config->tmp_path;
 $timezone=3;//$config->offset; 
 $shoppergroup1=0;
 $shoppergroup2=5;
-$hmera=date("F d Y H:i:s.",time()+(3600*$timezone)); 
+$hmera=date("F d Y H:i:s.",time()+(3600*$timezone));
 
+///////////////////////////////////
 
-
-//////////////
 //LANGUAGE
 $currencyid=47;
 $lang='el_gr';
 //MAIN TAX
-$maintax=23;
+$maintax=24;
 $monada='ΤΕΜΑΧΙΑ';
 $manufacturer='ΚΑΤΑΣΚΕΥΑΣΤΗΣ';
+
 // Connects to your Database
-$link=mysql_connect("$host", $user, $password) or die(mysql_error());
-mysql_select_db("$db") or die(mysql_error());
-mysql_set_charset('utf8',$link); 
+$link=mysqli_connect("$host", $user, $password) or die(mysqli_error($link));
+mysqli_select_db($link,"$db") or die(mysqli_error($link));
+mysqli_set_charset($link,'utf8');
 
-
-
-$product_code_prefix='P';
+$product_code_prefix='';
 $customer_code_prefix='IC';
 $once_customer_code_prefix='AC';
-
 
 $url = $_SERVER['REQUEST_URI']; //returns the current URL
 $parts = explode('/',$url);
@@ -77,7 +76,6 @@ $photourl=$dir."images/com_hikashop/upload/";
 $produrl=$dir."index.php?option=com_hikashop&ctrl=product&task=show&product_id=";
 $customerid=$_REQUEST['customerid'];
 
-
 $ip=$_SERVER['REMOTE_ADDR'];   // USER'S IP 
 $productid=$_REQUEST['productid'];
 $stock=$_REQUEST['stock'];
@@ -86,13 +84,12 @@ $orderid=$_REQUEST['orderid'];       // PRODUCT CODE
 $key=$_REQUEST['key'];       // PRODUCT CODE
 $passkey='';
 if (!($key==$passkey)) { exit; }
+
 ///////////////////////////////////
-//echo "\xEF\xBB\xBF";   //with bom
 
 if (!is_dir($tmp_path)) {
 	mkdir($tmp_path);
 }
-
 
 if ($action == 'deletetmp') {
 	//echo $tmp_path."<br>";
@@ -103,34 +100,25 @@ if ($action == 'deletetmp') {
 	unlink($file);
 }
 
-
-
-
-
-
-
 if ($action == 'customersok') {
 	$File = $tmp_path."/customers_".$key; 
 	$Handle = fopen($File, 'w');
-	
-	$data = mysql_result(mysql_query("SELECT NOW()"),0);
-	
-	//$data = date('Y-m-d H:i:s',time()); 
+	//$data = mysql_result(mysql_query("SELECT NOW()"),0);
+	$data = date('Y-m-d H:i:s',(time()-(3*60*60))); 
 	fwrite($Handle, $data); 
 	fclose($Handle); 	
 }
+
 if ($action == 'productsok') {
 	$file = $tmp_path."/products_".$key; 
 	$handle = fopen($file, 'w');
-	
-	$data = mysql_result(mysql_query("SELECT NOW()"),0);
-	//$data = date('Y-m-d H:i:s',time()); 
+	//$data = mysql_result(mysql_query("SELECT NOW()"),0);
+	$data = date('Y-m-d H:i:s',(time()-(3*60*60))); 
 	fwrite($handle, $data); 
 	fclose($handle); 	
 }
 
-
-
+///////////////////////////////////
 
 if ($action == 'customers') {
 	
@@ -153,6 +141,7 @@ if ($action == 'customers') {
 		
 		SELECT 
 		
+		ord.order_id order_id,
 		addr.address_id muser_id,
 		addr.address_firstname first_name,
 		addr.address_lastname last_name,
@@ -182,26 +171,25 @@ if ($action == 'customers') {
 		
 		
 		
-		FROM ".$dbprefix."hikashop_order ord
-		left join ".$dbprefix."hikashop_address addr on ord.order_shipping_address_id=addr.address_id
+		FROM ".$dbprefix."hikashop_order ord, ".$dbprefix."hikashop_address addr
 		left join ".$dbprefix."hikashop_user usr on usr.user_id=addr.address_user_id  
 		
 		where FROM_UNIXTIME(usr.user_created)>'".$lastdate."'
+		and (ord.order_billing_address_id=addr.address_id or ord.order_shipping_address_id=addr.address_id)
+		and ord.order_id>0
 		
-		
-		group by concat(addr.address_user_id,addr.address_lastname,addr.address_street)
-		order by addr.address_user_id,addr.address_street
+		order by order_id,addr.address_user_id,addr.address_street
 		
 		";
 	
 	//echo $query;
-	$data = mysql_query($query) or die(mysql_error());
+	$data = mysqli_query($link,$query) or die(mysqli_error($link));
 	
 	
 	//and virtuemart_user_id=0 	
 	// echo "ΚΩΔΙΚΟΣ;ΟΝΟΜΑ;ΕΠΙΘΕΤΟ;ΔΙΕΥΘΥΝΣΗ;ΤΚ;ΧΩΡΑ;ΠΟΛΗ/ΝΟΜΟΣ;ΠΕΡΙΟΧΗ;ΤΗΛΕΦΩΝΟ;ΚΙΝΗΤΟ;EMAIL;ΑΦΜ;ΔΟΥ;ΕΠΩΝΥΜΙΑ;ΕΠΑΓΓΕΛΜΑ;ΓΛΩΣΣΑ;<br>\n";
 	
-	while($alldata = mysql_fetch_array( $data ))
+	while($alldata = mysqli_fetch_array( $data ))
 	{
 		
 		
@@ -233,7 +221,7 @@ if ($action == 'customers') {
 			if (!$id>0) {
 				
 				echo $once_customer_code_prefix.$id.';'.$firstname.';'.$lastname.';'.$address1.';'.$postcode.';'.$country.';'.$state.';'.$city.';'
-				.$phonenumber.';'.$mobile.';'.$email.';'.$afm.';'.$doy.';'.$companyname.';'.$epaggelma.';'.$language,";<br>\n";
+				.$phonenumber.';'.$mobile.';;'.$afm.';'.$doy.';'.$companyname.';'.$epaggelma.';'.$language,";<br>\n";
 				
 				
 			} 
@@ -244,29 +232,11 @@ if ($action == 'customers') {
 				
 			}
 			
-			
-			
 		}
 		
 	}
 	
-	
-	
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 if ($action == 'products') {
@@ -294,7 +264,7 @@ if ($action == 'products') {
 		product_name,
 		product_weight,
 		product_quantity,
-		
+		product_sort_price as lianiki,
 		
 		(SELECT ctg.category_name FROM ".$dbprefix."hikashop_category ctg where ctg.category_type='manufacturer' and category_id=pro.product_manufacturer_id) mf_name,
 		
@@ -306,7 +276,7 @@ if ($action == 'products') {
 		
 		
 		(SELECT pric.price_value FROM ".$dbprefix."hikashop_price pric
-		where pric.price_product_id=pro.product_id limit 1) product_price,
+		where pric.price_product_id=pro.product_id and price_access<>'all') product_price,
 		
 		
 		(SELECT cgtg.category_name FROM ".$dbprefix."hikashop_product_category ctg, ".$dbprefix."hikashop_category cgtg
@@ -361,6 +331,8 @@ if ($action == 'products') {
 		
 		pro.product_code as product_sku,
 		product_id,
+		product_sort_price as lianiki,
+		
 		(SELECT ppro.product_name FROM ".$dbprefix."hikashop_product ppro where ppro.product_id=pro.product_parent_id) product_name,
 		(SELECT ppro.product_weight FROM ".$dbprefix."hikashop_product ppro where ppro.product_id=pro.product_parent_id) product_weight,
 		(SELECT ppro.product_quantity FROM ".$dbprefix."hikashop_product ppro where ppro.product_id=pro.product_parent_id) product_quantity,
@@ -379,7 +351,7 @@ if ($action == 'products') {
 		
 		
 		(SELECT pric.price_value FROM ".$dbprefix."hikashop_price pric
-		where pric.price_product_id=pro.product_parent_id limit 1) product_price,
+		where pric.price_product_id=pro.product_parent_id and price_access<>'all') product_price,
 		
 		
 		(SELECT cgtg.category_name FROM ".$dbprefix."hikashop_product_category ctg, ".$dbprefix."hikashop_category cgtg
@@ -419,11 +391,11 @@ if ($action == 'products') {
 	//	file_put_contents($logfile, $query."####\n", FILE_APPEND | LOCK_EX);
 	
 	
-	$data = mysql_query($query) or die(mysql_error()); 
+	$data = mysqli_query($link,$query) or die(mysqli_error($link)); 
 	
 	echo "ΚΩΔΙΚΟΣ;ΠΕΡΙΓΡΑΦΗ1;ΠΕΡΙΓΡΑΦΗ2;ΦΠΑ;ΤΙΜΗ1;ΤΙΜΗ2;ΔΙΑΘΕΣΙΜΟΤΗΤΑ;ΜΟΝΑΔΑ;ΚΑΤΗΓΟΡΙΑ;ΦΩΤΟΓΡΑΦΙΑ;URL<br>\n";
 	
-	while($alldata = mysql_fetch_array( $data ))
+	while($alldata = mysqli_fetch_array( $data ))
 	{
 		
 		$characteristic=$alldata['characteristic'];  
@@ -445,7 +417,9 @@ if ($action == 'products') {
 		
 		//$price=$alldata['product_price']+($alldata['product_price']*$taxrate);
 		$taxrate=number_format($alldata['calc_value'], 2, ',', '');	 	
-		$price=number_format($alldata['product_price']+ (($alldata['product_price']*$taxrate)/100), 2, ',', '');
+		//$price=number_format($alldata['product_price']+ (($alldata['product_price']*$taxrate)/100), 2, ',', '');
+		$price=$alldata['product_price']+(($alldata['product_price']*$taxrate)/100);
+		$lianiki=$alldata['lianiki']+(($alldata['lianiki']*$taxrate)/100);
 		
 		$product_quantity=number_format($alldata['product_quantity'], 2, ',', '');
 		$product_weight=number_format($alldata['product_weight'], 2, ',', '');
@@ -471,7 +445,7 @@ if ($action == 'products') {
 		
 		//$taxrate=number_format(100*$taxrate, 2, ',', '');	
 		
-		echo $product_code_prefix.$id."|".$idmpn.';'.$name1.';'.$manu.';'.$taxrate.';'.$price.";;".$product_quantity.";".$monada.";".$category.";".$photolink.";".$urllink.";".$product_weight.";<br>\n";			 
+		echo $product_code_prefix.$id."|".$idmpn.';'.$name1.';'.$manu.';'.$taxrate.';'.$lianiki."|1:".$price.";;".$product_quantity.";".$monada.";".$category.";".$photolink.";".$urllink.";".$product_weight.";<br>\n";			 
 		
 		
 		
@@ -491,32 +465,6 @@ if ($action == 'products') {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 if ($action == 'orders') {
 	
 
@@ -528,6 +476,7 @@ if ($action == 'orders') {
 	
 	SELECT 
 order_id,
+order_billing_address_id,
 order_shipping_address_id,
 order_user_id,
 order_full_price,
@@ -537,7 +486,6 @@ order_payment_method,
 order_shipping_price,
 order_shipping_method,
 FROM_UNIXTIME(order_modified) modified,
-comment,
 order_number,
 (SELECT payment_name FROM ".$dbprefix."hikashop_payment where payment_id=order_payment_id) payment_
 
@@ -548,7 +496,7 @@ order_number,
 
 
 FROM ".$dbprefix."hikashop_order 
-where order_status<>'shipped' and  order_status<>'cancelled'
+where order_status='created'
 and order_type='sale'
 
 ORDER BY order_id  asc	
@@ -559,16 +507,17 @@ ORDER BY order_id  asc
 	
 	//echo $query;
 	
-	$data = mysql_query($query) or die(mysql_error()); //
+	$data = mysqli_query($link,$query) or die(mysqli_error($link)); //
 	// file_put_contents('debug.log',"SELECT * FROM ".$dbprefix."virtuemart_orders ord,".$dbprefix."virtuemart_paymentmethods_el_gr pay,".$dbprefix."virtuemart_shipmentmethods_el_gr ship  where pay.virtuemart_paymentmethod_id=ord.virtuemart_paymentmethod_id and ship.virtuemart_shipmentmethod_id=ord.virtuemart_shipmentmethod_id and ord.order_status in ('U') and ord.order_tax<>0 " , FILE_APPEND | LOCK_EX);
 	
 	
-	echo "ΚΩΔΙΚΟΣ ΠΑΡΑΓΓΕΛΙΑΣ;ΚΩΔΙΚΟΣ ΠΕΛΑΤΗ;ΚΟΣΤΟΣ ΜΕΤΑΦΟΡΙΚΩΝ;ΚΟΣΤΟΣ ΑΝΤΙΚΑΤΑΒΟΛΗΣ;ΕΚΠΤΩΣΗ;ΗΜΕΡΟΜΗΝΙΑ;ΣΧΟΛΙΟ;<br>\n";
+	echo "ΚΩΔΙΚΟΣ ΠΑΡΑΓΓΕΛΙΑΣ;ΚΩΔΙΚΟΣ ΠΕΛΑΤΗ;ΚΟΣΤΟΣ ΜΕΤΑΦΟΡΙΚΩΝ;ΚΟΣΤΟΣ ΑΝΤΙΚΑΤΑΒΟΛΗΣ;ΕΚΠΤΩΣΗ;ΗΜΕΡΟΜΗΝΙΑ;ΣΧΟΛΙΟ;ΧΡΗΣΤΗΣ;VOUCHER;ΚΑΤΑΣΤΑΣΗ;ΚΩΔΙΚΟΣ ΠΕΛΑΤΗ ΑΠΟΣΤΟΛΗΣ;ΤΡΟΠΟΣ ΠΛΗΡΩΜΗΣ;ΤΡΟΠΟΣ ΑΠΟΣΤΟΛΗΣ;ΠΑΡΑΣΤΑΤΙΚΟ;<br>\n";
 	
-	while($alldata = mysql_fetch_array( $data ))
+	while($alldata = mysqli_fetch_array( $data ))
 	{
 		$id=$alldata['order_id'];  	 	
-		$userid= $alldata['order_shipping_address_id']; 
+		$userid= $alldata['order_billing_address_id'];
+		$sid= $alldata['order_shipping_address_id'];
 		
 		//$hmera=gmdate("d/m/Y H:i:s", $alldata['modified_on'] + 3600*($timezone+date("I"))); 
 		$hmera=$alldata['modified'] ; 
@@ -594,11 +543,11 @@ ORDER BY order_id  asc
 		
 		
 		if(!$userid>0){
-			echo $id.';'.$once_customer_code_prefix.$userid.";".$order_shipping_price.";".$order_payment_price.";0;".$hmera.";".$shipment.' '.$payment.' '.$comment.";<br>\n";
+			echo $id.';'.$once_customer_code_prefix.$userid.";".$order_shipping_price.";".$order_payment_price.";0;".$hmera.";".$shipment.' '.$payment.' '.$comment.";;;;".$once_customer_code_prefix.$sid.";<br>\n";
 		}
 		else{
 			
-			echo $id.';'.$customer_code_prefix.$userid.";".$order_shipping_price.";".$order_payment_price.";0;".$hmera.";".$order_number,' '.$shipment.' '.$payment.' '.$comment."<br>\n";
+			echo $id.';'.$customer_code_prefix.$userid.";".$order_shipping_price.";".$order_payment_price.";0;".$hmera.";".$order_number,' '.$shipment.' '.$payment.' '.$comment.";;;;".$customer_code_prefix.$sid.";<br>\n";
 			
 		}
 		
@@ -608,24 +557,6 @@ ORDER BY order_id  asc
 		
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -677,7 +608,7 @@ where ord.order_id=$orderid
 	
 	//	file_put_contents($logfile, $query."####\n", FILE_APPEND | LOCK_EX);
 	
-	$data = mysql_query( $query    ) or die(mysql_error()); 
+	$data = mysqli_query($link,$query) or die(mysqli_error($link)); 
 	
 	
 	
@@ -685,15 +616,12 @@ where ord.order_id=$orderid
 	
 	echo "ΚΩΔΙΚΟΣ;ΠΕΡΙΓΡΑΦΗ1;ΠΕΡΙΓΡΑΦΗ2;ΠΕΡΙΓΡΑΦΗ3;ΠΟΣΟΤΗΤΑ;ΜΟΝΑΔΑ;ΤΙΜΗ;ΦΠΑ;ΕΚΠΤΩΣΗ;<br>\n";
 	
-	while($alldata = mysql_fetch_array( $data ))
+	while($alldata = mysqli_fetch_array( $data ))
 	{
 
 $fulp=$alldata['fulp']; 
 $disp=$alldata['disp']; 
 		$discount=number_format(  (abs($disp)*100)/$fulp, 2, ',', '');
-
-
-
 
 
 		$description =  str_ireplace("|",' - ',$alldata['order_product_name']);     
@@ -704,7 +632,8 @@ $disp=$alldata['disp'];
 		$product_id = $alldata['order_product_code']; 
 		$product_quantity = $alldata['order_product_quantity']; 
 		//$amount=number_format($alldata['product_final_price'], 2, ',', '');
-		$amount=number_format($alldata['order_product_price']+$alldata['order_product_tax'], 2, ',', '');
+		//$amount=number_format($alldata['order_product_price']+$alldata['order_product_tax'], 2, ',', '');
+		$amount=$alldata['order_product_price']+$alldata['order_product_tax'];
 		//-
 		
 
@@ -735,7 +664,7 @@ $disp=$alldata['disp'];
 		
 		
 		
-		echo $product_code_prefix.$product_id.';'.$description.';;;'.$product_quantity.';'.$monada.';'.$amount.';'.$taxr.";".$discount.";;;;".$order_id.";<br>\n";
+		echo $product_code_prefix.$product_id.';'.$description.';;;'.$product_quantity.';'.$monada.';'.$amount.";;".$discount.";;;;".$order_id.";<br>\n";
 		
 		
 		
@@ -756,55 +685,10 @@ $disp=$alldata['disp'];
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //shipped
 if ($action == 'confirmorder') {
 	
-	$data = mysql_query("update ".$dbprefix."hikashop_order  set order_status='shipped' where order_id in (".$orderid.")") or die(mysql_error());	
+	$data = mysqli_query($link,"update ".$dbprefix."hikashop_order  set order_status='confirmed' where order_id in (".$orderid.")") or die(mysqli_error($link));	
 	echo $hmera;
 	
 }
@@ -813,7 +697,7 @@ if ($action == 'confirmorder') {
 ////canceled
 if ($action == 'cancelorder') {
 	
-	$data = mysql_query("update ".$dbprefix."hikashop_order  set order_status='canceled' where order_id in (".$orderid.")") or die(mysql_error());	
+	$data = mysqli_query($link,"update ".$dbprefix."hikashop_order  set order_status='canceled' where order_id in (".$orderid.")") or die(mysqli_error($link));	
 	echo $hmera;
 	
 }
@@ -831,7 +715,7 @@ file_put_contents($logfile,$query."\n", FILE_APPEND | LOCK_EX);
 		
 
 
-$data = mysql_query($query) or die(mysql_error());
+$data = mysqli_query($link,$query) or die(mysqli_error($link));
 
 
 echo substr($productid,strlen($product_code_prefix))."--".$hmera;
@@ -889,7 +773,7 @@ if ($action == 'orderstatus') {
 	
 	if ($nstatus) {
 		
-		$data = mysql_query("UPDATE ".$dbprefix."virtuemart_order_items SET order_status = '".$nstatus."' WHERE order_item_sku='".$productid."' and virtuemart_order_id = '".$orderid."'") or die(mysql_error());
+		$data = mysqli_query($link,"UPDATE ".$dbprefix."virtuemart_order_items SET order_status = '".$nstatus."' WHERE order_item_sku='".$productid."' and virtuemart_order_id = '".$orderid."'") or die(mysqli_error($link));
 		
 	}
 	
@@ -929,15 +813,15 @@ if ($action == 'redirect') {
 		}
 		
 		
-		$data = mysql_query("
+		$data = mysqli_query($link,"
 			SELECT * from ".$dbprefix."virtuemart_products as vip where product_sku='".$productid."'
-			") or die(mysql_error());
+			") or die(mysqli_error($link));
 		
-		echo mysql_num_rows($data);
+		echo mysqli_num_rows($data);
 		
-		if (mysql_num_rows($data)<>0) {
+		if (mysqli_num_rows($data)<>0) {
 			//GET PRODCUT ID
-			while($alldata = mysql_fetch_array( $data ))
+			while($alldata = mysqli_fetch_array( $data ))
 			{
 				$id=$alldata['virtuemart_product_id'];  	 	
 				break;		
@@ -1056,7 +940,7 @@ if ($action == 'uploadproduct') {
 		
 		
 		$query="SELECT * from ".$dbprefix."virtuemart_products where product_sku='".$productid."'";
-		$data = mysql_query($query) or die(mysql_error());
+		$data = mysqli_query($link,$query) or die(mysqli_error($link));
 		
 		//file_put_contents('emdiprices.log', $query."##\n", FILE_APPEND | LOCK_EX);
 		
@@ -1069,18 +953,18 @@ if ($action == 'uploadproduct') {
 		
 		//file_put_contents($logfile,"ok1#\n", FILE_APPEND | LOCK_EX);
 		
-		if (mysql_num_rows($data)<>0) {
+		if (mysqli_num_rows($data)<>0) {
 			//GET PRODCUT ID
-			while($alldata = mysql_fetch_array( $data ))
+			while($alldata = mysqli_fetch_array( $data ))
 			{
 				$id=$alldata['virtuemart_product_id'];  
 				
 				$query="select * from ".$dbprefix."virtuemart_product_prices where virtuemart_product_id=$id and virtuemart_shoppergroup_id=$shoppergroup1";
-				$data = mysql_query($query) or die(mysql_error());
+				$data = mysqli_query($link,$query) or die(mysqli_error($link));
 				
-				if (mysql_num_rows ( $data )==0 ) {
+				if (mysqli_num_rows ( $data )==0 ) {
 					
-					$data = mysql_query("
+					$data = mysqli_query($link,"
 						INSERT IGNORE INTO ".$dbprefix."virtuemart_product_prices						
 						(`virtuemart_product_price_id`, `virtuemart_product_id`, `virtuemart_shoppergroup_id`, `product_price`, `override`, `product_override_price`, 
 						`product_tax_id`, `product_discount_id`, `product_currency`, `product_price_publish_up`, `product_price_publish_down`, `price_quantity_start`, 
@@ -1089,15 +973,15 @@ if ($action == 'uploadproduct') {
 						(NULL, '$id', '$shoppergroup1', '$finalprice', 1, '$price', '$classid', NULL, '$currencyid', '0000-00-00 00:00:00.000000', '0000-00-00 00:00:00.000000', 
 						NULL, NULL, '0000-00-00 00:00:00.000000', '0', '0000-00-00 00:00:00.000000', '0', '0000-00-00 00:00:00.000000', '0');
 						
-						") or die(mysql_error());					
+						") or die(mysqli_error($link));					
 				}
 				
 				$query="select * from ".$dbprefix."virtuemart_product_prices where virtuemart_product_id=$id and virtuemart_shoppergroup_id=$shoppergroup2";
-				$data = mysql_query($query) or die(mysql_error());
+				$data = mysqli_query($link,$query) or die(mysqli_error($link));
 				
-				if (mysql_num_rows ( $data )==0 ) {
+				if (mysqli_num_rows ( $data )==0 ) {
 					
-					$data = mysql_query("
+					$data = mysqli_query($link,"
 						INSERT IGNORE INTO ".$dbprefix."virtuemart_product_prices						
 						(`virtuemart_product_price_id`, `virtuemart_product_id`, `virtuemart_shoppergroup_id`, `product_price`, `override`, `product_override_price`, 
 						`product_tax_id`, `product_discount_id`, `product_currency`, `product_price_publish_up`, `product_price_publish_down`, `price_quantity_start`, 
@@ -1106,7 +990,7 @@ if ($action == 'uploadproduct') {
 						(NULL, '$id', '$shoppergroup2', '$finalprice', 1, '$bggprice', '$classid', NULL, '$currencyid', '0000-00-00 00:00:00.000000', '0000-00-00 00:00:00.000000', 
 						NULL, NULL, '0000-00-00 00:00:00.000000', '0', '0000-00-00 00:00:00.000000', '0', '0000-00-00 00:00:00.000000', '0');
 						
-						") or die(mysql_error());					
+						") or die(mysqli_error($link));					
 				}
 				
 				
@@ -1120,11 +1004,11 @@ if ($action == 'uploadproduct') {
 					$finalscript="product_price = '$finalprice',";
 				}
 				
-				$data = mysql_query("
+				$data = mysqli_query($link,"
 					UPDATE ".$dbprefix."virtuemart_product_prices 
 					SET $pricescript $finalscript product_tax_id= '$classid', override=1, product_currency= '$currencyid'
 					WHERE virtuemart_product_id=$id and virtuemart_shoppergroup_id=$shoppergroup1						
-					") or die(mysql_error());
+					") or die(mysqli_error($link));
 				
 				// IF ADDITIONAL PRICE ARE EMPTY IGNORE
 				$bggscript='';
@@ -1132,11 +1016,11 @@ if ($action == 'uploadproduct') {
 					$bggscript="product_override_price = '$bggprice',";
 				}
 				
-				$data = mysql_query("
+				$data = mysqli_query($link,"
 					UPDATE ".$dbprefix."virtuemart_product_prices 
 					SET $bggscript $finalscript product_tax_id= '$classid', override=1, product_currency= '$currencyid'
 					WHERE virtuemart_product_id=$id and virtuemart_shoppergroup_id=$shoppergroup2
-					") or die(mysql_error());
+					") or die(mysqli_error($link));
 				
 				
 				
@@ -1200,7 +1084,7 @@ if ($action == 'uploadproduct') {
 	
 	if ($custom_p<>'')  {
 		$query="UPDATE ".$dbprefix."virtuemart_products SET product_availability = '".$custom_p."' WHERE virtuemart_product_id =$id";
-		$data = mysql_query($query) or die(mysql_error());
+		$data = mysqli_query($link,$query) or die(mysqli_error($link));
 	}
 	
 	file_put_contents($logfile, $custom_cl.'##'.$query."####\n", FILE_APPEND | LOCK_EX);
@@ -1722,7 +1606,7 @@ function set_order_status($state,$dbprefix) {
 	
 	//file_put_contents('emdi_status.log',$query."##\n", FILE_APPEND | LOCK_EX);
 	
-	$data = mysql_query($query) or die(mysql_error());
+	$data = mysqli_query($link,$query) or die(mysqli_error($link));
 	
 	
 	
@@ -1731,9 +1615,4 @@ function set_order_status($state,$dbprefix) {
 }
 
 
-
-
-
-
-
-?> 		
+?>
