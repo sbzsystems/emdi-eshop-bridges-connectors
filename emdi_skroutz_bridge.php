@@ -1,7 +1,7 @@
 <?php
 //PS
 /*------------------------------------------------------------------------
-		# EMDI - SKROUTZ BRIDGE by SBZ systems - Solon Zenetzis - version 1.0
+		# EMDI - SKROUTZ BRIDGE by SBZ systems - Solon Zenetzis - version 1.5
 		# ------------------------------------------------------------------------
 		# author    SBZ systems - Solon Zenetzis
 		# copyright Copyright (C) 2021 sbzsystems.com. All Rights Reserved.
@@ -17,7 +17,7 @@ require 'config.php';
 
 $logfile = 'emdibridge.txt';
 $offset= '';
- 
+
 
 
 $host                         = DB_HOSTNAME;
@@ -27,7 +27,7 @@ $db                           = DB_DATABASE;
 $dbprefix                     = DB_PREFIX;
 
 
- 
+
 $product_code_prefix='';
 $customer_invoice_code_prefix='IC';
 $customer_code_prefix='AC';
@@ -40,7 +40,7 @@ $addonid='PRO';
 $skroutzcat='SKROUTZ';
 $avail_id=7;
 $notavail_id=6;
-$apikey='HtlZwLE8ZNWjSqcAEidTaHY7N9aMsT0RH89V42iNqEcM1UcwHmAq0Ab3dptMFOUQ52CM7Od_frMTlaPWuHvpxg==';
+$apikey='xxxxxxxxxxxxxxxxxxxxx';
 
 //////////////
 $measurement='ΤΕΜΑΧΙΑ';
@@ -334,8 +334,8 @@ where created_at>'". $lastdate."'
 
 if ($action == 'orders') {
 
- 
- 
+
+
 	$data = mysqli_query($link,"
 SELECT * FROM `sbz_skroutz_docs`
 where 
@@ -373,7 +373,7 @@ state='open'
 		
 		
 		
- 
+
 		
 		$rowtext= $id.';'.$maincust.";0;0;0;".$hmera.";".$comment.";;".$voucher.";;".$deliverycust.";ΚΑΡΤΑ;COURIER SKROUTZ;;";		
 		$rowtext = str_ireplace("&amp;", "&", $rowtext);
@@ -475,49 +475,49 @@ if ($action == 'confirmorder') {
 		
 		
 		
-//ΛΗΨΗ ΩΡΩΝ
-$curl = curl_init();
+		//ΛΗΨΗ ΩΡΩΝ
+		$curl = curl_init();
 
-curl_setopt_array($curl, array(
-  CURLOPT_URL => 'https://api.skroutz.gr/merchants/ecommerce/orders/'.$key,
-  CURLOPT_RETURNTRANSFER => true,
-  CURLOPT_ENCODING => '',
-  CURLOPT_MAXREDIRS => 10,
-  CURLOPT_TIMEOUT => 0,
-  CURLOPT_FOLLOWLOCATION => true,
-  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-  CURLOPT_CUSTOMREQUEST => 'GET',
-  CURLOPT_HTTPHEADER => array(
-    'Authorization: Bearer '.$apikey,
-    'Accept: application/vnd.skroutz+json; version=3.0'
-  ),
-));
+		curl_setopt_array($curl, array(
+		CURLOPT_URL => 'https://api.skroutz.gr/merchants/ecommerce/orders/'.$key,
+		CURLOPT_RETURNTRANSFER => true,
+		CURLOPT_ENCODING => '',
+		CURLOPT_MAXREDIRS => 10,
+		CURLOPT_TIMEOUT => 0,
+		CURLOPT_FOLLOWLOCATION => true,
+		CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+		CURLOPT_CUSTOMREQUEST => 'GET',
+		CURLOPT_HTTPHEADER => array(
+		'Authorization: Bearer '.$apikey,
+		'Accept: application/vnd.skroutz+json; version=3.0'
+		),
+		));
 
-$response = curl_exec($curl);
+		$response = curl_exec($curl);
 
-curl_close($curl);
-//echo $response;
+		curl_close($curl);
+		//echo $response;
 
-$alldata=json_decode($response);
-//print_r ($alldata);
-
-
-
-$node=$alldata->order->accept_options->pickup_window;
-$pickup_window_id=$node[count($node)-1]->id;
-
-//echo $alldata->order->code.'<br>';
-//echo (count($node)-1).'<br>';
-//echo $pickup_window_id.'<br>';
+		$alldata=json_decode($response);
+		//print_r ($alldata);
 
 
+
+		$node=$alldata->order->accept_options->pickup_window;
+		$pickup_window_id=$node[count($node)-1]->id;
+
+		//echo $alldata->order->code.'<br>';
+		//echo (count($node)-1).'<br>';
+		//echo $pickup_window_id.'<br>';
 
 
 
 
 
-///////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////
+
+
+		///////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////
 
 
 
@@ -534,15 +534,15 @@ $pickup_window_id=$node[count($node)-1]->id;
 		//echo "https://api.skroutz.gr/merchants/ecommerce/orders/$key/accept"."\n";
 		//
 		
- //rbgjjLQgeo  ΑΧΙΛΛΕΩΣ
+		//rbgjjLQgeo  ΑΧΙΛΛΕΩΣ
 
 		$curl = curl_init();
 
 
 
 		curl_setopt_array($curl, array(
-	  CURLOPT_URL => 'https://api.skroutz.gr/merchants/ecommerce/orders/'.$key.'/accept?pickup_location=rbgjjLQgeo&pickup_window='.$pickup_window_id,
- 	  //CURLOPT_URL => 'https://api.skroutz.gr/merchants/ecommerce/orders/'.$key.'/accept',
+		CURLOPT_URL => 'https://api.skroutz.gr/merchants/ecommerce/orders/'.$key.'/accept?pickup_location=rbgjjLQgeo&pickup_window='.$pickup_window_id,
+		//CURLOPT_URL => 'https://api.skroutz.gr/merchants/ecommerce/orders/'.$key.'/accept',
 		CURLOPT_RETURNTRANSFER => true,
 		CURLOPT_ENCODING => '',
 		CURLOPT_MAXREDIRS => 10,
@@ -559,13 +559,13 @@ $pickup_window_id=$node[count($node)-1]->id;
 		$response = curl_exec($curl);
 
 		curl_close($curl);
-	    //echo $response;
+		//echo $response;
 
 		//
 		//
 		
 		
-	 
+		
 		
 		
 		
@@ -601,7 +601,7 @@ if ($action == 'cancelorder') {
 		$curl = curl_init();
 
 		curl_setopt_array($curl, array(
-		 CURLOPT_URL => 'https://api.skroutz.gr/merchants/ecommerce/orders/'.$key.'/reject?rejection_reason_other=not available',
+		CURLOPT_URL => 'https://api.skroutz.gr/merchants/ecommerce/orders/'.$key.'/reject?rejection_reason_other=not available',
 		//CURLOPT_URL => 'https://api.skroutz.gr/merchants/ecommerce/orders/'.$key.'/reject',
 		CURLOPT_RETURNTRANSFER => true,
 		CURLOPT_ENCODING => '',
@@ -639,19 +639,34 @@ if ($action == 'cancelorder') {
 
 
 
+
+
+
 function get_model($id) {
 
 	//if there is no connection with eshop
 	//return $id;
-        //exit;
- 
+	//exit;
+
 	global $link;
 	global $dbprefix;
+	global $taxrate;
 
 	$queryin="
 		
-	SELECT model,ean  FROM " . $dbprefix . "product
-	where product_id=$id
+	SELECT pro.model,pro.ean,tra.rate FROM " . $dbprefix . "product pro
+	
+	
+	left join " . $dbprefix . "tax_rule as tru
+	on tru.tax_class_id=pro.tax_class_id
+		
+	left join " . $dbprefix . "tax_rate as tra
+	on tra.tax_rate_id=tru.tax_rate_id
+	
+	
+	where pro.product_id=$id
+	
+	
 		
 	";
 	
@@ -663,6 +678,8 @@ function get_model($id) {
 	while($alldatain = mysqli_fetch_array( $datain ))
 	{
 		$model=$alldatain['model'];  
+		$taxrate=$alldatain['rate'];  
+		$taxrate = number_format($taxrate, 2, ',', '');
 		break;			
 		
 	}
@@ -674,4 +691,4 @@ function get_model($id) {
 
 
 
-?> 					
+?>
