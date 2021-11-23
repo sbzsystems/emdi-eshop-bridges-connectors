@@ -341,6 +341,7 @@ SELECT * FROM `sbz_skroutz_docs`
 where 
 -- event_type='new_order' and 
 state='open' 
+and code<>''
 -- or state='accepted' 
 ") or die(mysqli_error($link)); //
 
