@@ -13,9 +13,7 @@
 /*
 Change validation of upc
 edit /classes/Validate.php
-
 Find function:
-
 public static function isUpc($upc)
 {
 return !$upc || preg_match('/^[0-9]{0,12}$/', $upc);
@@ -66,12 +64,12 @@ $timezone=$config->offset;
 $passkey='';
 $relatedchar='^';
 $addonid='PRO';
-$barcode_field='barcode';
-$auto_product_id=1; //1 If you want the product id produced by ids
+$barcode_field='BARCODE';
+$auto_product_id=0; //1 If you want the product id produced by ids
 
-$key=$_REQUEST['key'];
+$key='yU5pI0lH7vX0yQ4f';
 
-if (!($key==$passkey)) { header("HTTP/1.0 404 Not Found"); exit(); }
+//if (!($key==$passkey)) { header("HTTP/1.0 404 Not Found"); exit(); }
 
 //////////////
 $measurement='ΤΕΜΑΧΙΑ';
@@ -166,13 +164,14 @@ if ($action == 'customers') {
 		addr.firstname,addr.lastname,cust.email,addr.company,
 		addr.address1,addr.address2,addr.postcode,addr.city,addr.phone,addr.phone_mobile,
 		addr.vat_number,addr.id_address,
-		stt.name state,ctr.name country
+		stt.name state,ctr.name country,addr.vat_number
 		
 		
 		FROM ".$dbprefix."customer as cust
 		left join ".$dbprefix."address addr on addr.id_customer=cust.id_customer
 		left join ".$dbprefix."state stt on stt.id_state=addr.id_state
 		left join ".$dbprefix."country_lang ctr on ctr.id_country=addr.id_country and ctr.id_lang=$lang_id
+		
 		
 		
 		where cust.active=1
@@ -213,10 +212,10 @@ if ($action == 'customers') {
 		$companyname=$alldata['company'];
 		$afm=$alldata['vat_number'];
 		$epaggelma='';
-		//$doy=$alldata['doy'];
+		$doy=$alldata['dni'];
 		//		$postcode=$alldata['date_added'];
 		$language='';
-		
+	
 		echo $customer_code_prefix.$id.';'.$firstname.';'.$lastname.';'.$address1.';'.$postcode.';'.
 		$country.';'.$state.';'.$city.';'.$phonenumber.';'.$mobile.';'.$email.';'.$afm.';'.$doy.';'.
 		$companyname.';'.$epaggelma.';'.$language.';'.$tu.";<br>\n";
@@ -232,70 +231,36 @@ if ($action == 'customers') {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 if ($action == 'products') {
-	
-	
-	$file = $tmp_path."/products_".$key;
-	$lastdate=0;
-	if (file_exists($file)) {
-		$handle = fopen($file, 'r');
-		$lastdate = fread($handle, 11);
-		fclose($handle);
-	}
-	
-	////PRODUCTS
-	
-	
-	//---------------------------
-	
-	$query="
-		
+
+
+		$file = $tmp_path."/products_".$key;
+		$lastdate=0;
+		if (file_exists($file)) {
+			$handle = fopen($file, 'r');
+			$lastdate = fread($handle, 11);
+			fclose($handle);
+		}
+
+		////PRODUCTS
+
+
+		//---------------------------
+
+		$query="
+
 		SELECT
 		
-		prd.reference,
-		prd.upc,
-		
-		/*GET ATTRIBUTE REFERENCE*/
-		(select patt.reference from ".$dbprefix."product_attribute patt where patt.id_product_attribute=pas.id_product_attribute limit 1) reference2,
+		prd.reference,	
 		
 		/*GET ATTRIBUTE BARCODE*/
-		(select patt.ean13 from ".$dbprefix."product_attribute patt where patt.id_product_attribute=pas.id_product_attribute limit 1) ean132,
-		
-		
+		(select patt.reference from ps_product_attribute patt where patt.id_product_attribute=pas.id_product_attribute limit 1) reference2,
+		(select patt.ean13 from ps_product_attribute patt where patt.id_product_attribute=pas.id_product_attribute limit 1) ean13b,
+
 		(select prl.name from ".$dbprefix."product_lang as prl where prl.id_product=prd.id_product and prl.id_lang=$lang_id) as name,pas.id_product_attribute,
-		
-		
-		
+
+
+
 		/*DESCRIPTION'S ATTRIBUTES*/
 		(
 		SELECT GROUP_CONCAT(attl.name SEPARATOR '.') FROM ".$dbprefix."attribute_lang as attl ,".$dbprefix."product_attribute_combination as pac
@@ -303,9 +268,9 @@ if ($action == 'products') {
 		and pac.id_attribute=attl.id_attribute
 		AND pac.id_product_attribute=pas.id_product_attribute
 		order by attl.id_attribute
-		limit 1)  as dtname,
-		
-		
+		)  as dtname,
+
+
 		/*CUSTOM FIELDS*/
 		(
 		SELECT GROUP_CONCAT(concat(
@@ -315,198 +280,258 @@ if ($action == 'products') {
 		and attr.id_attribute=pac.id_attribute
 		limit 1)
 		,':',attl.name) SEPARATOR '|')
-		
+
 		FROM ".$dbprefix."attribute_lang as attl ,".$dbprefix."product_attribute_combination as pac
 		where attl.id_lang=$lang_id
 		and pac.id_attribute=attl.id_attribute
 		AND pac.id_product_attribute=pas.id_product_attribute
 		order by attl.id_attribute
-		limit 1)  as attname,
-		
-		
-		
-		
+		)  as attname,
+
+
+
+
 		/*REDUCTION PRICE*/
-		(select reduction from ".$dbprefix."specific_price spp where 
+		(select reduction from ps_specific_price spp where 
 		spp.id_product=prd.id_product limit 1) reductionp, 
 		/*REDUCTION PRICE*/
-		(select reduction from ".$dbprefix."specific_price spp where 
-		spp.id_product_attribute=pas.id_product_attribute limit 1) reductiona, 
+		(select reduction from ps_specific_price spp where 
+		spp.id_product_attribute=pas.id_product_attribute limit 1) reductiona,
+        /*REDUCTION PRICE*/
+		(select price from ps_specific_price spp where 
+		spp.id_product=prd.id_product limit 1) reductionc, 		
+		      /*reduction_type*/
+		(select reduction_type from ps_specific_price spp where 
+		spp.id_product=prd.id_product limit 1) reductiont, 		
+
+
 		
-		
-		
-		
-		
-		
-		
+		(SELECT avst.quantity FROM ".$dbprefix."stock_available avst
+		where avst.id_product_attribute=0
+		and avst.id_product=prd.id_product) as quantity,
+
+
 		(SELECT avst.quantity FROM ".$dbprefix."stock_available avst
 		where avst.id_product_attribute=pas.id_product_attribute
 		and avst.id_product=prd.id_product) as tquantity,
+
+
+
+
+
+		prd.price,prd.wholesale_price,
 		
+		(SELECT patt.price FROM ps_product_attribute patt
+		where patt.id_product=prd.id_product
+		and patt.id_product_attribute=pas.id_product_attribute) as attprice,
 		
-		
-		
-		
-		prd.price,prd.wholesale_price,prd.id_product,prd.ean13,quantity,id_category_default,
-		
+		prd.id_product,prd.ean13,id_category_default,
+
 		(select rate from ".$dbprefix."tax_rule  psr,".$dbprefix."tax  pst
 		where psr.id_tax=pst.id_tax and id_tax_rules_group=prd.id_tax_rules_group
-		group by pst.id_tax limit 1) as ptax,
-		
+		group by pst.id_tax) as ptax,
+
 		(SELECT clng.name FROM ".$dbprefix."category_lang clng
-		where clng.id_category=id_category_default and clng.id_lang=$lang_id limit 1) as pcat,
-		
-		
-		
+		where clng.id_category=id_category_default and clng.id_lang=$lang_id) as pcat,
+
+
+
 		(SELECT psi.id_image FROM ".$dbprefix."image psi
 		where psi.cover=1 and psi.id_product=prd.id_product order by psi.position limit 1) as imageid,
-		
-		
-		
+
+
+
 		(SELECT atim.id_image FROM ".$dbprefix."product_attribute_image atim where atim.id_product_attribute=pas.id_product_attribute limit 1) as imageidatt
-		
-		
-		
-		FROM  ".$dbprefix."product as prd,".$dbprefix."product_attribute_shop as pas
-		
-		
-		
+
+
+
+		FROM  ".$dbprefix."product as prd
+
+		left join ".$dbprefix."product_attribute_shop as pas on pas.id_product=prd.id_product
+
+
 		where prd.active=1
+
 		
-		and pas.id_product=prd.id_product
-		
-		
-		and (prd.date_add>'".date('Y-m-d H:i:s', $lastdate)."' or prd.date_upd>'".date('Y-m-d H:i:s', $lastdate)."')
-		
-		
-		
+		and
+
+		 (prd.date_add>'".date('Y-m-d H:i:s', $lastdate)."' or prd.date_upd>'".date('Y-m-d H:i:s', $lastdate)."')
+
+
+
 		";
-	//group by prd.id_product
+		//group by prd.id_product
+
+
+		//echo $query;
+		$data = mysqli_query($link, $query) or die(mysqli_error($link));
+
+
+
+		//---------------------------
+		//date('Y-m-d H:i:s', $lastdate)
+
+		echo "ΚΩΔΙΚΟΣ;ΠΕΡΙΓΡΑΦΗ1;ΠΕΡΙΓΡΑΦΗ2;ΦΠΑ;ΤΙΜΗ1;ΤΙΜΗ2;ΔΙΑΘΕΣΙΜΟΤΗΤΑ;ΜΟΝΑΔΑ;ΚΑΤΗΓΟΡΙΑ;ΦΩΤΟΓΡΑΦΙΑ;URL;ΣΕΙΡΑ ΚΑΤΗΓΟΡΙΑΣ;<br>\n";
+
+
+
+		//$photourl
+		//$produrl
+
+
+
+		while($alldata = mysqli_fetch_array( $data ))
+		{
+			$id=$alldata['id_product'];
+			$name= $alldata['name'].' '.$alldata['dtname'];
+			$taxrate= $alldata['ptax'];
+			$price=$alldata['price'];
+			$attprice=$alldata['attprice'];
+			$reductionp=$alldata['reductionp'];
+			$reductiona=$alldata['reductiona'];
+			$reductionc=$alldata['reductionc'];
+			$reductiont=$alldata['reductiont'];
+			$wholesale_price=$alldata['wholesale_price'];
+		    $custom=$barcode_field.':'.$alldata['ean13'].'\n'.str_replace('|','\n',$alldata['attname']).'\n';
+			$test22=$alldata['ean13'];
+			$custom2=$barcode_field.':'.$alldata['ean13b'].'\n'.str_replace('|','\n',$alldata['attname']).'\n';
+			$quantity=$alldata['quantity'];
+			$tquantity=$alldata['tquantity'];
+			$category= $alldata['pcat'];
+			$id_category_default= $alldata['id_category_default'];
+			$id_product_attribute= $alldata['id_product_attribute'];
+			$mainreference= $alldata['reference'];
+			$reference= $alldata['reference2'];
+
+
+
+			//$price=number_format($price, 2, ',', '');
+
+			
+			
+			
+			
+			$price=$price+(($price*$taxrate)/100);
+			$attprice=$attprice+(($attprice*$taxrate)/100);
+			$price2=0;
+			
+			
+			
+			if (($reductionc) && ($reductiont=='amount')) {
+					$reductionc=$reductionc+(($reductionc*$taxrate)/100);
+					//$reductionp=$price*$reductionp;
+					$price2=$reductionc;
+			} else
+			if ($reductiona) {
+					//$reductiona=$reductiona+(($reductiona*$taxrate)/100);
+					$reductiona=$price*$reductiona;
+					$price2=$price-$reductiona;
+			} else
+			if ($reductionp) {
+					//$reductionp=$reductionp+(($reductionp*$taxrate)/100);
+					$reductionp=$price*$reductionp;
+					$price2=$price-$reductionp;
+			} 
+			
+			
+			
+			
+
+
+
+			
+			$taxrate=str_replace('.',$decimal_point,$taxrate);
+			$wholesale_price=str_replace('.',$decimal_point,$wholesale_price);
+
+			
+			
+			
 	
 	
-	//echo $query;
-	$data = mysqli_query($link, $query) or die(mysqli_error($link));
+
+
+			//IF ATTRIBUTE IMAGE
+			$imageidatt= $alldata['imageidatt'];
+			if ($imageidatt) {
+				$imageid= $imageidatt;
+				} else {
+				$imageid= $alldata['imageid'];
+			}
+
+
+			if (strlen($imageid)>1) {
+				$imgfolder=substr($imageid, 0, 1).'/'.substr($imageid, 1, 1);
+				} else {
+				$imgfolder=$imageid;
+			}
+
+
+			if ($id_product_attribute) {
+				$id_product_attribute='.'.$id_product_attribute;
+				$quantity=$tquantity;
+				$price=$price+$attprice;
+			}
+
+			//if ($auto_product_id) {
+			//	$reference=$product_code_prefix.$id_product_attribute;				
+			//} 
+			
+			
+			//if (!$reference) { $reference=$mainreference.$id_product_attribute; }
+			if (!$reference) { $reference=$mainreference; }
+			
+			//αν ειναι combination το barcode παει σε αλλο πεδιο οποτε εδω γινεται ο ελεγχος//
+			if (!$test22) { $custom=$custom2;}
+			
+			$price=str_replace('.',$decimal_point,$price);
+			
+			echo $reference.';'.$name.';'.$custom.';'.$maintax.';'.$price.';;'.$quantity.';'.
+			$measurement.";".$category.";".
+			$photourl.$imgfolder.'/'.$imageid.'-thickbox_default.jpg'.
+			";".$produrl.$id.";".$id_category_default.";<br>\n";
 	
-	
-	
-	//---------------------------
-	//date('Y-m-d H:i:s', $lastdate)
-	
-	echo "ΚΩΔΙΚΟΣ;ΠΕΡΙΓΡΑΦΗ1;ΠΕΡΙΓΡΑΦΗ2;ΦΠΑ;ΤΙΜΗ1;ΤΙΜΗ2;ΔΙΑΘΕΣΙΜΟΤΗΤΑ;ΜΟΝΑΔΑ;ΚΑΤΗΓΟΡΙΑ;ΦΩΤΟΓΡΑΦΙΑ;URL;ΣΕΙΡΑ ΚΑΤΗΓΟΡΙΑΣ;<br>\n";
-	
-	
-	
-	//$photourl
-	//$produrl
-	
-	
-	
-	
-	while($alldata = mysqli_fetch_array( $data ))
-	{
-		
-		
-		$id=$alldata['id_product'];
-		$name= $alldata['name'].' '.$alldata['dtname'];
-		$taxrate= $alldata['ptax'];
-		$price=$alldata['price'];
-		$reductionp=0;//$alldata['reductionp'];
-		$reductiona=0;//$alldata['reductiona'];
-		$wholesale_price=$alldata['wholesale_price'];
-		
-		$quantity=$alldata['tquantity'];
-		$category= $alldata['pcat'];
-		$id_category_default= $alldata['id_category_default'];
-		$id_product_attribute= $alldata['id_product_attribute'];
-		$reference2= $alldata['reference2'];
-		$reference= $alldata['reference'];
-		$upc= $alldata['upc'];
-		
-		
-		
-		//$price=number_format($price, 2, ',', '');
-		
-		
-		
-		
-		
-		$price=$price+(($price*$taxrate)/100);
-		
-		if ($reductiona) {
-			//$reduction=$reduction+(($reduction*$taxrate)/100);
-			$price=$price-$reductiona;
-		} else
-		if ($reductionp) {
-			//$reduction=$reduction+(($reduction*$taxrate)/100);
-			$price=$price-$reductionp;
+			
+			//echo $id."-".$id_product_attribute;
+
+
+
 		}
-		
-		
-		
-		
-		
-		
-		
-		$price=str_replace('.',$decimal_point,$price);
-		$taxrate=str_replace('.',$decimal_point,$taxrate);
-		$wholesale_price=str_replace('.',$decimal_point,$wholesale_price);
-		
-		
-		
-		//IF ATTRIBUTE IMAGE
-		$imageidatt= $alldata['imageidatt'];
-		if ($imageidatt) {
-			$imageid= $imageidatt;
-		} else {
-			$imageid= $alldata['imageid'];
-		}
-		
-		
-		if (strlen($imageid)>1) {
-			$imgfolder=substr($imageid, 0, 1).'/'.substr($imageid, 1, 1);
-		} else {
-			$imgfolder=$imageid;
-		}
-		
-		
-		if ($id_product_attribute) {
-			$id_product_attribute='.'.$id_product_attribute;
-			$custom=$barcode_field.':'.$alldata['ean132'].'\n'.str_replace('|','\n',$alldata['attname']).'\n';
-		} else {
-			$custom=$barcode_field.':'.$alldata['ean13'].'\n'.str_replace('|','\n',$alldata['attname']).'\n';
-		}
-		
-		if ($upc) {
-			$custom=$custom.$upc_field.':'.$upc.'\n';
-		}
-		if ($reference) {
-			$custom=$custom.$reference_field.':'.$reference.'\n';
-		}
-		
-		
-		if ($auto_product_id) {
-			$reference2=$product_code_prefix.$id.$id_product_attribute;				
-		} 
-		
-		
-		echo $reference2.';'.$name.';'.$custom.';'.$taxrate.';'.$price.';'.$wholesale_price.';'.$quantity.';'.
-		$measurement.";".$category.";".
-		$photourl.$imgfolder.'/'.$imageid.'-thickbox_default.jpg'.
-		";".$produrl.$id.";".$id_category_default.";<br>\n";
-		
-		
-		
-		
-		
-		
+		////
+
+
+
+
+
 	}
-	////
-	
-	
-	
-	
-	
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -540,14 +565,12 @@ if ($action == 'products') {
 
 if ($action == 'orders') {
 	
-	
-	
-	$data = mysqli_query($link, "
+	$query="
 		
 		
 		SELECT
 		ord.id_order as order_id,
-		ord.id_address_delivery as user_id,
+		ord.id_address_invoice as user_id,
 		ord.date_upd as timestamp,
 		ord.total_shipping as shipping,
 		ord.total_discounts as discount,
@@ -558,11 +581,15 @@ if ($action == 'orders') {
 		FROM ".$dbprefix."orders as ord
 		
 		where
-		ord.current_state in (1,2,3,10,11,12,14)
+		ord.current_state in (10) 
 		
 		
 		
-		") or die(mysqli_error($link)); //
+		";
+	
+	//echo $query;
+	
+	$data = mysqli_query($link,$query) or die(mysqli_error($link)); //
 	
 	
 	echo "ΚΩΔΙΚΟΣ ΠΑΡΑΓΓΕΛΙΑΣ;ΚΩΔΙΚΟΣ ΠΕΛΑΤΗ;ΚΟΣΤΟΣ ΜΕΤΑΦΟΡΙΚΩΝ;ΚΟΣΤΟΣ ΑΝΤΙΚΑΤΑΒΟΛΗΣ;ΕΚΠΤΩΣΗ;ΗΜΕΡΟΜΗΝΙΑ;ΣΧΟΛΙΟ;ΧΡΗΣΤΗΣ;<br>\n";
@@ -573,8 +600,9 @@ if ($action == 'orders') {
 		$userid= $alldata['user_id'];
 		//$hmera=gmdate("d/m/Y H:i:s", $alldata['timestamp'] + 3600*($timezone+date("I")));
 		$hmera=$alldata['timestamp'] ;
-		$shipping=   str_replace('€','',       $alldata['shipping']);
-		$shipping=   str_replace('.',',',   $shipping);
+		$shipping=$alldata['shipping'];
+		$shipping=str_replace('€','',$shipping);
+		$shipping=str_replace('.',',',$shipping);
 		$message=$alldata['message'];
 		if ($message) {
 			$comment=$alldata['message'] .' '. $alldata['payment'];
@@ -619,7 +647,7 @@ if ($action == 'order') {
 	$data = mysqli_query($link, "
 		SELECT
 		
-		ord.product_reference reference2,
+		ord.product_reference reference,
 		
 		
 		/*GET ATTRIBUTE BARCODE
@@ -645,11 +673,9 @@ if ($action == 'order') {
 	{
 		$description = $alldata['product'];
 		
-		if ($auto_product_id) {
-			$product_id = $product_code_prefix.$alldata['product_code'];
-		} else {
-			$product_id = $alldata['reference2'];
-		}
+		
+			$product_id = $alldata['reference'];
+		
 		
 		
 		
@@ -731,8 +757,9 @@ if ($action == 'order') {
 
 if ($action == 'confirmorder') {
 	
-	$data = mysqli_query($link, "update ".$dbprefix."order set order_status_id=5 where order_id in (".$orderid.")") or die(mysqli_error($link));
-	
+	//$data = mysqli_query($link, "update ".$dbprefix."order set order_status_id=2 where order_id in (".$orderid.")") or die(mysqli_error($link));
+	$data = mysqli_query($link, "update ".$dbprefix."orders set current_state=4 where id_order =".$orderid) or die(mysqli_error($link));
+
 	echo $hmera;
 }
 
@@ -839,7 +866,7 @@ if ($action == 'updatestock') {
 
 if ($action == 'cancelorder') {
 	
-	$data = mysqli_query($link, "update ".$dbprefix."order set order_status_id=7 where order_id in (".$orderid.")") or die(mysqli_error($link));
+	$data = mysqli_query($link, "update ".$dbprefix."orders set current_state=6 where id_order =".$orderid) or die(mysqli_error($link));
 	
 	echo $hmera;
 	
@@ -1359,4 +1386,3 @@ function base_enc($encoded) {
 }
 
 mysqli_close($link);
-
