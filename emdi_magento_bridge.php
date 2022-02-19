@@ -8,7 +8,7 @@
 		# Websites: http://www.sbzsystems.com
 		# Technical Support:  Forum - http://www.sbzsystems.com
 	-------------------------------------------------------------------------*/
-
+//echo "test";
 header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 header('Content-Type: text/html; charset=UTF-8');
 //error_reporting(E_ALL ^ E_NOTICE);
@@ -18,12 +18,14 @@ header('Content-Type: text/html; charset=UTF-8');
 
 //GET DB SETTINGS FROM /app/etc/local.xml
 $host = 'localhost';
-$user = '';
-$password = '';
-$db = '';
+$user = 'jolovies';
+$password = '6M8u8Ceqz49QA5dt';
+$db = 'jolovies';
 $dbprefix = '';
 
-$passkey='1234'; // EMDI access password
+
+
+$passkey='KGMx722'; // EMDI access password
 $logfile = 'emdibridge.txt';
 $offset= 0;
 $tmp_path = 'tmp';
@@ -52,6 +54,7 @@ $customer_code_prefix='C';
 $once_customer_code_prefix='O';
 
 
+
 $url = $_SERVER['REQUEST_URI']; //returns the current URL
 $parts = explode('/',$url);
 $dir = "http" . (($_SERVER['SERVER_PORT'] == 443) ? "s://" : "://") .$_SERVER['SERVER_NAME'];
@@ -66,11 +69,21 @@ $customerid=$_REQUEST['customerid'];
 
 
 $ip=$_SERVER['REMOTE_ADDR'];   // USER'S IP 
+
 $productid=$_REQUEST['productid'];
+
 $stock=$_REQUEST['stock'];
+
 $action=$_REQUEST['action'];       // PRODUCT CODE
+
 $orderid=$_REQUEST['orderid'];       // PRODUCT CODE
+
 $key=$_REQUEST['key'];       // PRODUCT CODE
+
+
+
+//echo '#'.$key.'#';
+
 if (!($key==$passkey)) { exit; }
 ///////////////////////////////////
 //echo "\xEF\xBB\xBF";   //with bom
@@ -174,23 +187,25 @@ if ($action == 'customers') {
 		cus.parent_id,
 		cus.customer_id,cus.customer_address_id,cus.fax,cus.region,cus.postcode,
 		cus.lastname,cus.firstname,cus.street,cus.city,cus.email,cus.telephone,
-		cus.country_id,cus.address_type,cus.prefix,cus.middlename,cus.suffix,cus.company,cus.vat_id,
+		cus.country_id,cus.address_type,cus.prefix,cus.middlename,cus.suffix,cus.company,cus.vat_id,cus.country_id,
 		
-		(SELECT sub.updated_at  FROM ".$dbprefix."sales_flat_order_grid sub where sub.entity_id=cus.parent_id) updated,
+		(SELECT sub.updated_at  FROM ".$dbprefix."sales_order_grid sub where sub.entity_id=cus.parent_id) updated,
 		
 		-- GET VAT
-		(SELECT sfo.customer_taxvat FROM sales_flat_order sfo where sfo.entity_id=cus.parent_id) taxvat
+		(SELECT sfo.customer_taxvat FROM sales_order sfo where sfo.entity_id=cus.parent_id) taxvat
 		
 		
-		FROM ".$dbprefix."sales_flat_order_address cus
+		FROM ".$dbprefix."sales_order_address cus
 		where cus.address_type='shipping'
 		
 		and 
-		(SELECT sub.updated_at  FROM ".$dbprefix."sales_flat_order_grid sub where sub.entity_id=cus.parent_id)
+		(SELECT sub.updated_at  FROM ".$dbprefix."sales_order_grid sub where sub.entity_id=cus.parent_id)
 		>'".date('Y-m-d H:i:s', $lastdate)."'	
 		
 		
 		group by
+		cus.parent_id,cus.customer_id,cus.customer_address_id,cus.fax,cus.region,cus.postcode,cus.lastname,cus.firstname,cus.street,cus.city,cus.email,cus.telephone,
+		cus.country_id,cus.address_type,cus.prefix,cus.middlename,cus.suffix,cus.company,cus.vat_id,
 		(case when cus.customer_id is null then concat('$once_customer_code_prefix',cus.parent_id) else concat('$customer_code_prefix',cus.customer_id) end)
 		
 		
@@ -198,7 +213,7 @@ if ($action == 'customers') {
 	
 	
 	
-	//echo $query;
+	
 	
 	$data = mysqli_query($link,$query) or die(mysqli_error($link));
 	
@@ -222,7 +237,7 @@ if ($action == 'customers') {
 		
 		$region=$alldata['region'];
 		$zip=$alldata['postcode'];
-		$country=$alldata['country'];
+		$country=$alldata['country_id'];
 		
 		$city=$alldata['city'];
 		$company=$alldata['company'];
@@ -233,7 +248,7 @@ if ($action == 'customers') {
 		$email=$alldata['email'];		
 		
 		
-		echo $id.';'.$firstname.';'.$lastname.';'.$street.';'.$postcode.';'.$country.';'.$region.';'.$city.';'
+		echo $id.';'.$firstname.';'.$lastname.';'.$street.';'.$zip.';'.$country.';'.$region.';'.$city.';'
 		.$phonenumber.';'.$mobile.';'.$email.';'.$vat.';'.$doy.';'.$company.';'.$epaggelma.';'.$language.";<br>\n";
 		
 	}
@@ -298,10 +313,11 @@ if ($action == 'products') {
 		pro.updated_at,
 		pro.sku,
 		
-		(SELECT sub.value FROM ".$dbprefix."catalog_product_entity_varchar sub where sub.entity_id=pro.entity_id and sub.attribute_id=71 and sub.store_id=$store_id) product_name,
-		(SELECT sub.value FROM ".$dbprefix."catalog_product_entity_varchar sub where sub.entity_id=pro.entity_id and sub.attribute_id=85 and sub.store_id=$store_id) image_file,
+		(SELECT sub.value FROM ".$dbprefix."catalog_product_entity_varchar sub where sub.entity_id=pro.entity_id and sub.attribute_id=73 and sub.store_id=2) product_name,
+		(SELECT sub.value FROM ".$dbprefix."catalog_product_entity_varchar sub where sub.entity_id=pro.entity_id and sub.attribute_id=73 and sub.store_id=$store_id) product_name_en,
+		(SELECT sub.value FROM ".$dbprefix."catalog_product_entity_varchar sub where sub.entity_id=pro.entity_id and sub.attribute_id=87 and sub.store_id=$store_id) image_file,
 		(SELECT sub.value FROM ".$dbprefix."catalog_product_entity_varchar sub where sub.entity_id=pro.entity_id and sub.attribute_id=98 and sub.store_id=$store_id) product_page,
-		
+		(SELECT sub.value FROM ".$dbprefix."catalog_product_entity_varchar sub where sub.entity_id=pro.entity_id and sub.attribute_id=183 and sub.store_id=$store_id) EAN,
 		
 		
 		
@@ -315,8 +331,8 @@ if ($action == 'products') {
 		
 		(SELECT sub.value FROM ".$dbprefix."catalog_product_entity_text sub where sub.entity_id=pro.entity_id and sub.attribute_id=72 and sub.store_id=$store_id) description,
 		
-		(SELECT sub.value FROM ".$dbprefix."catalog_product_entity_decimal sub where sub.entity_id=pro.entity_id and sub.attribute_id=75 and sub.store_id=$store_id) product_price,
-		(SELECT sub.value FROM ".$dbprefix."catalog_product_entity_decimal sub where sub.entity_id=pro.entity_id and sub.attribute_id=80 and sub.store_id=$store_id) product_weight,
+		(SELECT sub.value FROM ".$dbprefix."catalog_product_entity_decimal sub where sub.entity_id=pro.entity_id and sub.attribute_id=77 and sub.store_id=$store_id) product_price,
+		(SELECT sub.value FROM ".$dbprefix."catalog_product_entity_decimal sub where sub.entity_id=pro.entity_id and sub.attribute_id=82 and sub.store_id=$store_id) product_weight,
 		(SELECT sub.value FROM ".$dbprefix."catalog_product_entity_decimal sub where sub.entity_id=pro.entity_id and sub.attribute_id=76 and sub.store_id=$store_id) special_price,
 		(SELECT sub.value FROM ".$dbprefix."catalog_product_entity_decimal sub where sub.entity_id=pro.entity_id and sub.attribute_id=80 and sub.store_id=$store_id) weight_,
 				
@@ -329,9 +345,10 @@ if ($action == 'products') {
 		-- TAX RATE
 		(
 		SELECT 
-		(SELECT rat.rate FROM ".$dbprefix."tax_calculation cal,".$dbprefix."tax_calculation_rate rat
+		(SELECT rat.rate FROM tax_calculation cal,tax_calculation_rate rat
 		where cal.tax_calculation_rate_id=rat.tax_calculation_rate_id
-		and sub.tax_class_id=cal.product_tax_class_id limit 1
+		and sub.tax_class_id=cal.product_tax_class_id 
+		and rat.code='EU-GR'
 		)
 		FROM ".$dbprefix."catalog_product_index_price sub
 		where sub.entity_id=pro.entity_id
@@ -349,7 +366,7 @@ if ($action == 'products') {
 		-- CATEGORY
 		(SELECT ent.value FROM ".$dbprefix."catalog_category_product cat,".$dbprefix."catalog_category_entity_varchar ent
 		where cat.category_id=ent.entity_id
-		and cat.product_id=pro.entity_id and ent.attribute_id=41 limit 1) category_title,
+		and cat.product_id=pro.entity_id and ent.attribute_id=120 limit 1) category_title,
 		
 		
 		-- CATEGORY ID
@@ -361,6 +378,7 @@ if ($action == 'products') {
 		
 		
 		-- ADDITIONAL FEE
+	/*
 		(
 		SELECT adfe.feeamount FROM ".$dbprefix."additionalfees adfe
 		where adfe.status=1 and feetype='Fixed' and
@@ -372,15 +390,19 @@ if ($action == 'products') {
 		and ent.attribute_id=41 limit 1) limit 1
 		) add_fee,
 		
+		*/
+		
+		0 add_fee,
+		
 		
 		
 		
 		-- CATALOG PRICE 1
-		(SELECT ctp.value FROM ".$dbprefix."catalog_product_entity_group_price ctp
+		(SELECT ctp.value FROM ".$dbprefix."catalog_product_entity_tier_price ctp
 		where ctp.customer_group_id=$shoppergroup1 and ctp.entity_id=pro.entity_id limit 1) price_cat1,
 		
 		-- CATALOG PRICE 2
-		(SELECT ctp.value FROM ".$dbprefix."catalog_product_entity_group_price ctp
+		(SELECT ctp.value FROM ".$dbprefix."catalog_product_entity_tier_price ctp
 		where ctp.customer_group_id=$shoppergroup2 and ctp.entity_id=pro.entity_id limit 1) price_cat2
 		
 		
@@ -409,8 +431,8 @@ if ($action == 'products') {
 	//left join ".$dbprefix."vm_category
 	//on ".$dbprefix."virtuemart_categories.category_id =".$dbprefix."virtuemart_categories.category_id
 	
-	echo "ΚΩΔΙΚΟΣ;ΠΕΡΙΓΡΑΦΗ1;ΠΕΡΙΓΡΑΦΗ2;ΦΠΑ;ΤΙΜΗ1;ΤΙΜΗ2;ΔΙΑΘΕΣΙΜΟΤΗΤΑ;ΜΟΝΑΔΑ;ΚΑΤΗΓΟΡΙΑ;ΦΩΤΟΓΡΑΦΙΑ;URL;ΣΕΙΡΑ ΚΑΤΗΓΟΡΙΑΣ<br>\n";
-	
+	echo "ΚΩΔΙΚΟΣ;ΠΕΡΙΓΡΑΦΗ1;ΠΕΡΙΓΡΑΦΗ2;ΦΠΑ;ΤΙΜΗ1;ΤΙΜΗ2;ΔΙΑΘΕΣΙΜΟΤΗΤΑ;ΜΟΝΑΔΑ;ΚΑΤΗΓΟΡΙΑ;ΦΩΤΟΓΡΑΦΙΑ;URL;ΣΕΙΡΑ ΚΑΤΗΓΟΡΙΑΣ;ΒΑΡΟΣ<br>\n";
+
 	
 	
 	while($alldata = mysqli_fetch_array( $data ))
@@ -424,8 +446,20 @@ if ($action == 'products') {
 		$name2= $alldata['attribute']; 
 		$add_fee= $alldata['add_fee']; 
 		$brand=$alldata['brand'];
+		$EAN=$alldata['EAN'];
+		$product_name_en=$alldata['product_name_en'];
+		
+		
+		$weight=$alldata['product_weight'];
+		$weight=   str_replace('.',',',       $weight);
+		$weight=1;
+		//$weight=number_format($weight, 4, ',', '');
+		
+		
 		
 		$price=$alldata['product_price'];
+		$mainprice=$mainprice['mainprice'];
+		
 		
 		if ($add_fee<>0) {
 			$price=$price+$add_fee;
@@ -439,12 +473,10 @@ if ($action == 'products') {
 		$category_id= $alldata['category_id']; 
 		$product_page= $alldata['product_page']; 
 		
-		//$price=$price +($price*$taxrate/100);
+		
 		$price=number_format($price, 2, ',', '');
-		
-		
-		
-		$taxrate=number_format($alldata['tax_rate'], 2, ',', '');	 
+		//$price=$price +($price*$taxrate/100);
+		 
 		$stock=number_format($alldata['stock'], 2, ',', '');   
 		
 		if ($alldata['image_file']) {
@@ -453,6 +485,32 @@ if ($action == 'products') {
 		if ($product_page) {
 			$urllink=$produrl.$product_page;
 		} else {$urllink='';}
+		
+		
+		$taxrate= $alldata['tax_rate']; 
+		//$taxrate=number_format($alldata['tax_rate'], 2, ',', '');	
+		//$taxrate=gettype($taxrate);
+		
+		
+		if (!$taxrate) {
+			$taxrate=$maintax;
+			}
+		else {$taxrate= $alldata['tax_rate'];}
+		
+		
+		//$taxrate=number_format(100*$taxrate, 2, ',', '');	
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		
 		
 		$price_cat1='';
@@ -465,14 +523,15 @@ if ($action == 'products') {
 		}
 		
 		
-		$weight_=number_format($alldata['weight_'], 4, ',', '');	   
+			   
 		
 		
 		
 		$genfields=$model.':'.$brand.'\n';
 		
 		//"|".$idmpn
-		$rowtext=$product_code_prefix.$id.';'.$name1.';'.$genfields.';'.$taxrate.';'.$price.$price_cat1.$price_cat2.";;$stock;".$monada.";".$category.";".$photolink.";".$urllink.";".$category_id.";".$weight_.";<br>\n";
+
+		$rowtext=$product_code_prefix.$id.';'.$name1.';EAN:'.$EAN.'\nBRAND:'.$brand.'\nΑΓΓΛΙΚΗ_ΠΕΡΙΓΡΑΦΗ:'.$product_name_en.';'.$taxrate.';'.$price.$price_cat1.$price_cat2.";;$stock;".$monada.";".$category.";".$photolink.";".$urllink.";".$category_id.";".$weight.";<br>\n";
 		//$rowtext=$product_code_prefix.$id.";".$name1.";ΡΑΦΙ:".$shelf.'\n'.";;;;;;".$category.";".$photolink.";".$urllink.";<br>\n";
 		
 		$rowtext=str_ireplace("&amp;","&",$rowtext);
@@ -485,7 +544,7 @@ if ($action == 'products') {
 		$rowtext=str_ireplace("&gt;",">",$rowtext);	
 		
 			
-		//$taxrate=number_format(100*$taxrate, 2, ',', '');	
+		
 		
 		echo $rowtext;			 
 
@@ -522,18 +581,24 @@ if ($action == 'orders') {
 		
 		SELECT sal.updated_at,sal.created_at,sal.entity_id,
 		sal.shipping_amount,sal.total_invoiced,sal.customer_note,
-		sal.customer_id,
+		sal.customer_id,sal.increment_id,
 		
-		(select sub.customer_id from ".$dbprefix."sales_flat_order_address sub where sub.parent_id=sal.entity_id 
+		(select sub.customer_id from ".$dbprefix."sales_order_address sub where sub.parent_id=sal.entity_id 
 		and sub.address_type='shipping') customer_id2,
 		
 		
 		-- GET SHIPPING DESCRIPTION
-		(SELECT sfo.shipping_description FROM sales_flat_order sfo where sfo.entity_id=sal.entity_id) shipping_description
+		(SELECT sfo.shipping_description FROM sales_order sfo where sfo.entity_id=sal.entity_id) shipping_description,
 		
+		-- GET SHIPPING AMOUNT
+		(select sfo.base_shipping_incl_tax from sales_order sfo  where sfo.entity_id=sal.entity_id )
+		 as shipping,
+		 
+		-- GET COD AMOUNT
+		(select sfcod.amount  from amasty_cash_on_delivery_fee_order sfcod  where sfcod.order_id=sal.entity_id )
+		 as cod
 		
-		
-		FROM ".$dbprefix."sales_flat_order sal
+		FROM ".$dbprefix."sales_order sal
 		where sal.status in ('processing','pending')
 		
 		order by sal.created_at
@@ -553,7 +618,7 @@ if ($action == 'orders') {
 		$userid= $alldata['customer_id2']; 
 		$customer_address_id=$alldata['customer_address_id']; 
 		$shipping_description=$alldata['shipping_description']; 
-		
+		$increment_id=$alldata['increment_id']; 
 		
 		
 		
@@ -564,17 +629,38 @@ if ($action == 'orders') {
 		//$payment=$alldata['payment_name'];		
 		//$coupon_discount=$alldata['coupon_discount'];
 		
-		$comment=$comment.' '.$shipping_description;
+		
+		//$comment=.$comment.' '.$increment_id;
+		$comment=$increment_id;
+		
+		//gia courier ama xreiastei
+		//$comment=$comment.' '.$shipping_description;
 		
 		$comment=str_ireplace("\r",'',$comment);
 		$comment=str_ireplace("\n",' ',$comment);
 		$comment=str_ireplace(";",'',$comment);
 		
 		
+		
+		$shipping=$alldata['shipping'];
+		$shipping=   str_replace('.',',',       $shipping);
+		
+		
+		
+		$cod=$alldata['cod'];
+		$cod=$cod*1.24;
+		$cod=number_format($cod, 2, ',', '');
+		$cod=   str_replace('.',',',       $cod);
+		
+		
+		
+		
+		
+		
 		if (!$userid) {
-			echo $id.';'.$once_customer_code_prefix.$id.";".$shipment.";;".$coupon_discount.";".$hmera.";".$comment."<br>\n";				
+			echo $id.';'.$once_customer_code_prefix.$id.";".$shipping.";".$cod.";".$coupon_discount.";".$hmera.";".$comment."<br>\n";				
 		} else {
-			echo $id.';'.$customer_code_prefix.$userid.";".$shipment.";;".$coupon_discount.";".$hmera.";".$comment."<br>\n";				
+			echo $id.';'.$customer_code_prefix.$userid.";".$shipping.";".$cod.";".$coupon_discount.";".$hmera.";".$comment."<br>\n";				
 		}
 		
 		
@@ -638,7 +724,8 @@ if ($action == 'order') {
 		tax_percent,
 		price_incl_tax
 		
-		FROM ".$dbprefix."sales_flat_order_item
+		
+		FROM ".$dbprefix."sales_order_item
 		
 		where order_id=$orderid
 		and product_type<>'bundle'
@@ -662,20 +749,23 @@ if ($action == 'order') {
 		//$amount=number_format($alldata['row_total'], 2, ',', '');
 		
 		$amount=$alldata['price_incl_tax'];
-		$amount=($amount*100)/(100+$alldata['tax_percent']);
+		//$amount=($amount*100)/(100+$alldata['tax_percent']);
 		
 		$amount=number_format($amount, 2, ',', '');
 		
 		
 		
 		$order_id= $alldata['order_id']; 
-		
+		//$increment_id= $alldata['increment_id'];
 		
 		$taxrate=number_format($alldata['tax_percent'], 2, ',', '');
+		
 		//$monada = $alldata['product_unit']; 
 		$product_attribute = $alldata['product_options']; 
 		
 		echo $product_code_prefix.$product_id.';'.$description.';;;'.$product_quantity.';'.$monada.';'.$amount.';'.$taxrate.";0;;;;".$order_id.";<br>\n";
+		
+		
 		
 		
 		
@@ -741,7 +831,7 @@ if ($action == 'confirmorder') {
 	
 	$data =mysqli_query($link,"
 		
-		update ".$dbprefix."sales_flat_order 
+		update ".$dbprefix."sales_order 
 		set status='complete'
 		where entity_id=$orderid
 		
@@ -765,7 +855,7 @@ if ($action == 'cancelorder') {
 	
 	$data = mysqli_query($link,"
 		
-		update ".$dbprefix."sales_flat_order 
+		update ".$dbprefix."sales_order 
 		set status='canceled'
 		where entity_id=$orderid
 		
