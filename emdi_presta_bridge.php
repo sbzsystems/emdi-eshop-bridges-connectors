@@ -57,19 +57,19 @@ $customer_code_prefix='IC';
 $onetime_customer_code_prefix='AC';
 $lang_code='el';
 $decimal_point=',';
-$lang_id=2;
+$lang_id=1;
 $store_id=1;
 $tmp_path = 'tmp';
 $timezone=$config->offset;
 $passkey='';
 $relatedchar='^';
 $addonid='PRO';
-$barcode_field='BARCODE';
+$barcode_field='barcode';
 $auto_product_id=0; //1 If you want the product id produced by ids
 
-$key='yU5pI0lH7vX0yQ4f';
+$key=$_REQUEST['key'];
 
-//if (!($key==$passkey)) { header("HTTP/1.0 404 Not Found"); exit(); }
+if (!($key==$passkey)) { header("HTTP/1.0 404 Not Found"); exit(); }
 
 //////////////
 $measurement='ΤΕΜΑΧΙΑ';
@@ -164,7 +164,7 @@ if ($action == 'customers') {
 		addr.firstname,addr.lastname,cust.email,addr.company,
 		addr.address1,addr.address2,addr.postcode,addr.city,addr.phone,addr.phone_mobile,
 		addr.vat_number,addr.id_address,
-		stt.name state,ctr.name country,addr.vat_number
+		stt.name state,ctr.name country,addr.dni
 		
 		
 		FROM ".$dbprefix."customer as cust
@@ -210,9 +210,9 @@ if ($action == 'customers') {
 		$mobile=$alldata['phone_mobile'];
 		$email=$alldata['email'];
 		$companyname=$alldata['company'];
-		$afm=$alldata['vat_number'];
+		$afm=$alldata['dni'];
 		$epaggelma='';
-		$doy=$alldata['dni'];
+		$doy=$alldata['vat_number'];
 		//		$postcode=$alldata['date_added'];
 		$language='';
 	
@@ -392,18 +392,26 @@ if ($action == 'products') {
 			$reductionc=$alldata['reductionc'];
 			$reductiont=$alldata['reductiont'];
 			$wholesale_price=$alldata['wholesale_price'];
-		    $custom=$barcode_field.':'.$alldata['ean13'].'\n'.str_replace('|','\n',$alldata['attname']).'\n';
-			$test22=$alldata['ean13'];
-			$custom2=$barcode_field.':'.$alldata['ean13b'].'\n'.str_replace('|','\n',$alldata['attname']).'\n';
+			$reference=$alldata['ean13'];
+			$referencecomb=$alldata['ean13b'];
+			
+			
+		    //$custom=$barcode_field.':'.$alldata['ean13'].'\n'.str_replace('|','\n',$alldata['attname']).'\n';
+			//$test22=$alldata['ean13'];
+			//$custom2=$barcode_field.':'.$alldata['ean13b'].'\n'.str_replace('|','\n',$alldata['attname']).'\n';
+			
+			
+			
 			$quantity=$alldata['quantity'];
 			$tquantity=$alldata['tquantity'];
 			$category= $alldata['pcat'];
 			$id_category_default= $alldata['id_category_default'];
 			$id_product_attribute= $alldata['id_product_attribute'];
-			$mainreference= $alldata['reference'];
-			$reference= $alldata['reference2'];
-
-
+			
+			
+			//$mainreference= $alldata['reference'];
+			//$reference= $alldata['reference2'];
+			//$reference= $alldata['reference'];
 
 			//$price=number_format($price, 2, ',', '');
 
@@ -461,6 +469,17 @@ if ($action == 'products') {
 
 			if (strlen($imageid)>1) {
 				$imgfolder=substr($imageid, 0, 1).'/'.substr($imageid, 1, 1);
+				if (substr($imageid, 2, 1)) {
+					$imgfolder= $imgfolder.'/'.substr($imageid, 2, 1);
+				}
+				if (substr($imageid, 3, 1)) {
+					$imgfolder= $imgfolder.'/'.substr($imageid, 3, 1);
+				}
+				if (substr($imageid, 4, 1)) {
+					$imgfolder= $imgfolder.'/'.substr($imageid, 4, 1);
+				}
+				
+				
 				} else {
 				$imgfolder=$imageid;
 			}
@@ -478,16 +497,17 @@ if ($action == 'products') {
 			
 			
 			//if (!$reference) { $reference=$mainreference.$id_product_attribute; }
-			if (!$reference) { $reference=$mainreference; }
+			//ελέγχει αν έχει κωδικό στο combination και αν εχει θα παρει αυτόν
+			if ($referencecomb) { $reference=$referencecomb; }
 			
 			//αν ειναι combination το barcode παει σε αλλο πεδιο οποτε εδω γινεται ο ελεγχος//
-			if (!$test22) { $custom=$custom2;}
+			//if (!$test22) { $custom=$custom2;}
 			
 			$price=str_replace('.',$decimal_point,$price);
 			
 			echo $reference.';'.$name.';'.$custom.';'.$maintax.';'.$price.';;'.$quantity.';'.
 			$measurement.";".$category.";".
-			$photourl.$imgfolder.'/'.$imageid.'-thickbox_default.jpg'.
+			$photourl.$imgfolder.'/'.$imageid.'.jpg'.
 			";".$produrl.$id.";".$id_category_default.";<br>\n";
 	
 			
@@ -565,12 +585,14 @@ if ($action == 'products') {
 
 if ($action == 'orders') {
 	
-	$query="
+	
+	
+	$data = mysqli_query($link, "
 		
 		
 		SELECT
 		ord.id_order as order_id,
-		ord.id_address_invoice as user_id,
+		ord.id_address_delivery as user_id,
 		ord.date_upd as timestamp,
 		ord.total_shipping as shipping,
 		ord.total_discounts as discount,
@@ -581,15 +603,11 @@ if ($action == 'orders') {
 		FROM ".$dbprefix."orders as ord
 		
 		where
-		ord.current_state in (10) 
+		ord.current_state in (1,2,3,10,11,12,14)
 		
 		
 		
-		";
-	
-	//echo $query;
-	
-	$data = mysqli_query($link,$query) or die(mysqli_error($link)); //
+		") or die(mysqli_error($link)); //
 	
 	
 	echo "ΚΩΔΙΚΟΣ ΠΑΡΑΓΓΕΛΙΑΣ;ΚΩΔΙΚΟΣ ΠΕΛΑΤΗ;ΚΟΣΤΟΣ ΜΕΤΑΦΟΡΙΚΩΝ;ΚΟΣΤΟΣ ΑΝΤΙΚΑΤΑΒΟΛΗΣ;ΕΚΠΤΩΣΗ;ΗΜΕΡΟΜΗΝΙΑ;ΣΧΟΛΙΟ;ΧΡΗΣΤΗΣ;<br>\n";
@@ -600,9 +618,8 @@ if ($action == 'orders') {
 		$userid= $alldata['user_id'];
 		//$hmera=gmdate("d/m/Y H:i:s", $alldata['timestamp'] + 3600*($timezone+date("I")));
 		$hmera=$alldata['timestamp'] ;
-		$shipping=$alldata['shipping'];
-		$shipping=str_replace('€','',$shipping);
-		$shipping=str_replace('.',',',$shipping);
+		$shipping=   str_replace('€','',       $alldata['shipping']);
+		$shipping=   str_replace('.',',',   $shipping);
 		$message=$alldata['message'];
 		if ($message) {
 			$comment=$alldata['message'] .' '. $alldata['payment'];
@@ -757,8 +774,8 @@ if ($action == 'order') {
 
 if ($action == 'confirmorder') {
 	
-	//$data = mysqli_query($link, "update ".$dbprefix."order set order_status_id=2 where order_id in (".$orderid.")") or die(mysqli_error($link));
-	$data = mysqli_query($link, "update ".$dbprefix."orders set current_state=4 where id_order =".$orderid) or die(mysqli_error($link));
+	//$data = mysqli_query($link, "update ".$dbprefix."order set order_status_id=5 where order_id in (".$orderid.")") or die(mysqli_error($link));
+	$data = mysqli_query($link, "update ".$dbprefix."orders set current_state=2 where id_order =".$orderid) or die(mysqli_error($link));
 
 	echo $hmera;
 }
