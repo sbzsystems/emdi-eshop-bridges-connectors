@@ -164,14 +164,15 @@ if ($action == 'customers') {
 		addr.firstname,addr.lastname,cust.email,addr.company,
 		addr.address1,addr.address2,addr.postcode,addr.city,addr.phone,addr.phone_mobile,
 		addr.vat_number,addr.id_address,
-		stt.name state,ctr.name country,addr.dni
+		stt.name state,ctr.name country,addr.dni,
+		cty.iso_code iso_code
 		
 		
 		FROM ".$dbprefix."customer as cust
 		left join ".$dbprefix."address addr on addr.id_customer=cust.id_customer
 		left join ".$dbprefix."state stt on stt.id_state=addr.id_state
 		left join ".$dbprefix."country_lang ctr on ctr.id_country=addr.id_country and ctr.id_lang=$lang_id
-		
+		left join ".$dbprefix."country cty on cty.id_country=addr.id_country
 		
 		
 		where cust.active=1
@@ -203,21 +204,26 @@ if ($action == 'customers') {
 		$tu=$alldata['address2'];
 		
 		$postcode=$alldata['postcode'];
+		
+		
 		$country=$alldata['country'];
+		$iso_code=$alldata['iso_code'];
+		
+		
 		$state=$alldata['state'];
 		$city=$alldata['city'];
 		$phonenumber=$alldata['phone'];
 		$mobile=$alldata['phone_mobile'];
 		$email=$alldata['email'];
 		$companyname=$alldata['company'];
-		$afm=$alldata['dni'];
+		$afm=$alldata['vat_number'];
 		$epaggelma='';
-		$doy=$alldata['vat_number'];
-		//		$postcode=$alldata['date_added'];
+		$doy=$state;
+		//$postcode=$alldata['date_added'];
 		$language='';
 	
 		echo $customer_code_prefix.$id.';'.$firstname.';'.$lastname.';'.$address1.';'.$postcode.';'.
-		$country.';'.$state.';'.$city.';'.$phonenumber.';'.$mobile.';'.$email.';'.$afm.';'.$doy.';'.
+		$iso_code.';'.$city.';'.$city.';'.$phonenumber.';'.$mobile.';'.$email.';'.$afm.';'.$doy.';'.
 		$companyname.';'.$epaggelma.';'.$language.';'.$tu.";<br>\n";
 	}
 	
@@ -592,11 +598,14 @@ if ($action == 'orders') {
 		
 		SELECT
 		ord.id_order as order_id,
-		ord.id_address_delivery as user_id,
+		ord.id_address_delivery as user_del,
+		ord.id_address_invoice as user_inv,
 		ord.date_upd as timestamp,
 		ord.total_shipping as shipping,
+		ord.codfee as handling,
 		ord.total_discounts as discount,
 		ord.total_wrapping as delcost,
+		
 		ord.payment,
 		(SELECT msg.message FROM ".$dbprefix."message msg where msg.id_order=ord.id_order limit 1) message
 		
@@ -610,23 +619,33 @@ if ($action == 'orders') {
 		") or die(mysqli_error($link)); //
 	
 	
-	echo "ΚΩΔΙΚΟΣ ΠΑΡΑΓΓΕΛΙΑΣ;ΚΩΔΙΚΟΣ ΠΕΛΑΤΗ;ΚΟΣΤΟΣ ΜΕΤΑΦΟΡΙΚΩΝ;ΚΟΣΤΟΣ ΑΝΤΙΚΑΤΑΒΟΛΗΣ;ΕΚΠΤΩΣΗ;ΗΜΕΡΟΜΗΝΙΑ;ΣΧΟΛΙΟ;ΧΡΗΣΤΗΣ;<br>\n";
+	echo "ΚΩΔΙΚΟΣ ΠΑΡΑΓΓΕΛΙΑΣ;ΚΩΔΙΚΟΣ ΠΕΛΑΤΗ;ΚΟΣΤΟΣ ΜΕΤΑΦΟΡΙΚΩΝ;ΚΟΣΤΟΣ ΑΝΤΙΚΑΤΑΒΟΛΗΣ;ΕΚΠΤΩΣΗ;ΗΜΕΡΟΜΗΝΙΑ;ΣΧΟΛΙΟ;ΧΡΗΣΤΗΣ;VOUCHER;ΚΑΤΑΣΤΑΣΗ;ΚΩΔΙΚΟΣ ΠΕΛΑΤΗ ΑΠΟΣΤΟΛΗΣ;ΤΡΟΠΟΣ ΠΛΗΡΩΜΗΣ;ΤΡΟΠΟΣ ΑΠΟΣΤΟΛΗΣ;ΠΑΡΑΣΤΑΤΙΚΟ;<br>\n";
+
+	//$userdel kai $userinv gia thn periptwsh pou exoyn diaforetika stoixeia timologhshs apo apostolhs
 	
 	while($alldata = mysqli_fetch_array( $data ))
 	{
 		$id=$alldata['order_id'];
-		$userid= $alldata['user_id'];
+		$userdel= $alldata['user_del'];
+		$userinv= $alldata['user_inv'];
 		//$hmera=gmdate("d/m/Y H:i:s", $alldata['timestamp'] + 3600*($timezone+date("I")));
 		$hmera=$alldata['timestamp'] ;
+		
 		$shipping=   str_replace('€','',       $alldata['shipping']);
 		$shipping=   str_replace('.',',',   $shipping);
+		
+		$handling=   str_replace('€','',       $alldata['handling']);
+		//$handling=$handling-1,24;
+		//$handling=   str_replace('.',',',   $shipping);
+		$handling=0.0001;
+		
 		$message=$alldata['message'];
 		if ($message) {
 			$comment=$alldata['message'] .' '. $alldata['payment'];
 		} else { $comment=$alldata['payment']; }
 		
 		
-		echo $id.';'.$customer_code_prefix.$userid.";".$shipping.";0;0;".$hmera.";".$comment.";<br>\n";
+		echo $id.';'.$customer_code_prefix.$userinv.";".$shipping.";".$handling.";0;".$hmera.";".$comment.";;;;".$customer_code_prefix.$userdel.";;;<br>\n";
 		
 		
 	}
@@ -665,12 +684,7 @@ if ($action == 'order') {
 		SELECT
 		
 		ord.product_reference reference,
-		
-		
-		/*GET ATTRIBUTE BARCODE
-		(select patt.reference from ".$dbprefix."product_attribute patt where patt.id_product_attribute=ord.product_attribute_id limit 1) reference2,
-		*/
-		
+		ord.product_ean13 referencecomp,
 		ord.id_order as order_id,
 		ord.product_name as product,
 		concat(ord.product_id,'.',ord.product_attribute_id) as product_code,
@@ -691,7 +705,9 @@ if ($action == 'order') {
 		$description = $alldata['product'];
 		
 		
-			$product_id = $alldata['reference'];
+		$product_id = $alldata['reference'];
+		$reference=$alldata['referencecomp'];
+		
 		
 		
 		
@@ -710,7 +726,7 @@ if ($action == 'order') {
 		$monada = $measurement;
 		$product_attribute = $alldata['extra'];
 		
-		echo $product_id.';'.$description.';;;'.$product_quantity.';'.$monada.';'.$amount.';'.$taxrate.';'.$discount.";<br>\n";
+		echo $reference.';'.$description.';;;'.$product_quantity.';'.$monada.';'.$amount.';'.$taxrate.';'.$discount.";<br>\n";
 		
 		
 		
