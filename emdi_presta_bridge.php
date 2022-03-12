@@ -39,6 +39,7 @@ include_once('config/config.inc.php');
 
 
 
+
 $logfile = 'emdibridge.txt';
 $adminfolder='myadmin';
 $reference_field='reference';
@@ -47,17 +48,28 @@ $tokenProducts = '3daa381c9d9438302a20eaa8153e6b37';   //    admin/index.php?con
 $tokenCustomers = 'e56e5f3de293a9df35a7526e6227a3e5';   //    admin/index.php?controller=AdminCustomers&id_customer=39&viewcustomer&token=xxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 $offset= '';
-$host = _DB_SERVER_;
+
+//$host = _DB_SERVER_;
+$host = "localhost";
+
 $user = _DB_USER_;
 $password = _DB_PASSWD_;
 $db = _DB_NAME_;
 $dbprefix = _DB_PREFIX_;
-$product_code_prefix='P';
+
+
+
+
+
+
+
+
+$product_code_prefix='';
 $customer_code_prefix='IC';
 $onetime_customer_code_prefix='AC';
 $lang_code='el';
 $decimal_point=',';
-$lang_id=1;
+$lang_id=7;
 $store_id=1;
 $tmp_path = 'tmp';
 $timezone=$config->offset;
@@ -78,10 +90,14 @@ $measurementaddon='ΠΡΟΣΘΕΤΑ';
 //$vat_field='ΑΦΜ';
 //$tax_office_field='ΔΟΥ';
 $maintax=24;
+
+
+
 // Connects to your Database
 $link=mysqli_connect("$host", $user, $password) or die(mysqli_error($link));
 mysqli_select_db($link,"$db") or die(mysqli_error($link));
 //mysqli_set_charset('utf8',$link);
+
 
 mysqli_query($link,"SET CHARACTER SET 'utf8'");
 //mysqli_query($link,"SET SESSION collation_connection ='utf8_unicode_ci'");
@@ -473,22 +489,34 @@ if ($action == 'products') {
 			}
 
 
+
+
+
 			if (strlen($imageid)>1) {
 				$imgfolder=substr($imageid, 0, 1).'/'.substr($imageid, 1, 1);
-				if (substr($imageid, 2, 1)) {
+				if (substr($imageid, 2, 1)!='') {
 					$imgfolder= $imgfolder.'/'.substr($imageid, 2, 1);
 				}
-				if (substr($imageid, 3, 1)) {
+				if (substr($imageid, 3, 1)!='') {
 					$imgfolder= $imgfolder.'/'.substr($imageid, 3, 1);
 				}
-				if (substr($imageid, 4, 1)) {
+				if (substr($imageid, 4, 1)!='') {
 					$imgfolder= $imgfolder.'/'.substr($imageid, 4, 1);
+				}
+				if (substr($imageid, 5, 1)!='') {
+					$imgfolder= $imgfolder.'/'.substr($imageid, 5, 1);
+				}
+				if (substr($imageid, 6, 1)!='') {
+					$imgfolder= $imgfolder.'/'.substr($imageid, 6, 1);
 				}
 				
 				
+	
 				} else {
 				$imgfolder=$imageid;
 			}
+
+
 
 
 			if ($id_product_attribute) {
@@ -602,7 +630,7 @@ if ($action == 'orders') {
 		ord.id_address_invoice as user_inv,
 		ord.date_upd as timestamp,
 		ord.total_shipping as shipping,
-		ord.codfee as handling,
+		ord.total_wrapping as handling,
 		ord.total_discounts as discount,
 		ord.total_wrapping as delcost,
 		
@@ -791,16 +819,15 @@ if ($action == 'order') {
 if ($action == 'confirmorder') {
 	
 	//$data = mysqli_query($link, "update ".$dbprefix."order set order_status_id=5 where order_id in (".$orderid.")") or die(mysqli_error($link));
-	$data = mysqli_query($link, "update ".$dbprefix."orders set current_state=2 where id_order =".$orderid) or die(mysqli_error($link));
+	$data = mysqli_query($link, "update ".$dbprefix."orders set current_state=4 where id_order =".$orderid) or die(mysqli_error($link));
 
 	echo $hmera;
 }
 
 
 
+
 if ($action == 'updatestock') {
-	
-	
 	
 	
 	
@@ -809,91 +836,113 @@ if ($action == 'updatestock') {
 	if ($auto_product_id) {		
 		$query=$query." concat(id_product,'.',id_product_attribute)='".substr($productid,strlen($product_code_prefix))."'";
 	} else {
-		$query=$query." reference='".substr($productid,strlen($product_code_prefix))."'";			
+		$query=$query." ean13='".substr($productid,strlen($product_code_prefix))."'";			
 	}
-		//echo $query;
+	//echo $query;
 	
 	$data = mysqli_query($link,$query) or die(mysqli_error($link));
 	
-	
-
-	
-	
-		//GET ID BY REFERENCE
+	//GET ID BY REFERENCE
 	$id_product='';
 	$query="select id_product from ".$dbprefix."product_attribute where ";
 	if ($auto_product_id) {		
 		$query=$query." concat(id_product,'.',id_product_attribute)='".substr($productid,strlen($product_code_prefix))."'";
 	} else {
-		$query=$query." reference='".substr($productid,strlen($product_code_prefix))."'";			
+		$query=$query." ean13='".substr($productid,strlen($product_code_prefix))."'";			
 	}
-	//	echo $query;
+	
 	//echo $query;
 	$data = mysqli_query($link,$query) or die(mysqli_error($link));
+	while($alldata = mysqli_fetch_array( $data ))
+	{
+		$id_product=$alldata['id_product'];
+	}
+	
+	
+	//	echo'ok';	
+	if ($id_product) {
+		
+		// UPDATE ATTRIBUTES
+		$query="update ".$dbprefix."stock_available set quantity=".$stock." where ";	
+		$query=$query.	"id_product_attribute=(select pra.id_product_attribute from ".$dbprefix."product_attribute pra where ";
+		if ($auto_product_id) {		
+			$query=$query." concat(id_product,'.',id_product_attribute)='".substr($productid,strlen($product_code_prefix))."'";
+		} else {
+			$query=$query." ean13='".substr($productid,strlen($product_code_prefix))."'";			
+		}
+		$query=$query.")";		
+		$query=$query."and id_product=".$id_product;	
+		
+		//echo $query;	
+		$data = mysqli_query($link,$query) or die(mysqli_error($link));
+		
+		//GET TOTAL
+		$query="SELECT sum(quantity) qty FROM ".$dbprefix."stock_available where id_product=".$id_product." and id_product_attribute<>0";	
+		//	echo $query;	
+		$data = mysqli_query($link,$query) or die(mysqli_error($link));
+		while($alldata = mysqli_fetch_array( $data ))
+		{
+			$qty=$alldata['qty'];
+		}
+
+
+		
+		//UPDATE TOTAL
+		$query="update ".$dbprefix."stock_available set quantity=".$qty." where id_product=".$id_product." and id_product_attribute=0";	
+		//	echo $query;	
+		$data = mysqli_query($link,$query) or die(mysqli_error($link));
+
+		
+	} else {
+		
+		
+		
+		
+		//GET ID BY REFERENCE
+		$id_product='';
+		$query="select id_product from ".$dbprefix."product where ";
+		if ($auto_product_id) {		
+			$query=$query." concat(id_product,'.',id_product_attribute)='".substr($productid,strlen($product_code_prefix))."'";
+		} else {
+			$query=$query." ean13='".substr($productid,strlen($product_code_prefix))."'";			
+		}
+		
+		//echo $query;
+		$data = mysqli_query($link,$query) or die(mysqli_error($link));
 		while($alldata = mysqli_fetch_array( $data ))
 		{
 			$id_product=$alldata['id_product'];
 		}
 		
 		
-		
-	//	echo'ok';
-		
-	
-	
-	
-		// UPDATE ATTRIBUTES
-	$query="update ".$dbprefix."stock_available set quantity=".$stock." where ";	
-	$query=$query.	"id_product_attribute=(select pra.id_product_attribute from ".$dbprefix."product_attribute pra where ";
-	if ($auto_product_id) {		
-		$query=$query." concat(id_product,'.',id_product_attribute)='".substr($productid,strlen($product_code_prefix))."'";
-	} else {
-		$query=$query." reference='".substr($productid,strlen($product_code_prefix))."'";			
-	}
-	$query=$query.")";		
-	$query=$query."and id_product=".$id_product;	
-	
-//	echo $query;	
-	$data = mysqli_query($link,$query) or die(mysqli_error($link));
-	
-		
- 
- 
-     
-	 
-	 
-	 
-	
-	
-	//GET TOTAL
-	$query="SELECT sum(quantity) qty FROM ".$dbprefix."stock_available where id_product=".$id_product." and id_product_attribute<>0";	
-//	echo $query;	
-	$data = mysqli_query($link,$query) or die(mysqli_error($link));
-		while($alldata = mysqli_fetch_array( $data ))
-		{
-			$qty=$alldata['qty'];
+		if ($id_product) {
+			
+			//SET TOTAL QUANTITY NO ATTRIBUTES
+			$query="update ".$dbprefix."product set quantity=".$stock." where id_product=".$id_product;
+			//echo $query;
+			$data = mysqli_query($link, $query) or die(mysqli_error($link));
+			
+			
+			//UPDATE TOTAL
+			$query="update ".$dbprefix."stock_available set quantity=".$stock." where id_product=".$id_product." and id_product_attribute=0";	
+				//echo $query;	
+			$data = mysqli_query($link,$query) or die(mysqli_error($link));
+			
 		}
 
-	//UPDATE TOTAL
-	$query="update ".$dbprefix."stock_available set quantity=".$qty." where id_product=".$id_product." and id_product_attribute=0";	
-//	echo $query;	
-	$data = mysqli_query($link,$query) or die(mysqli_error($link));
+		
+	}
 	
- 
-	
-	//SET TOTAL QUANTITY NO ATTRIBUTES
-	$query="update ".$dbprefix."product set quantity=".$stock." where reference='".substr($productid,strlen($product_code_prefix))."'";
-	echo $query;
-	$data = mysqli_query($link, $query) or die(mysqli_error($link));
-	 
-	
-		//echo'ok4';
-	
- 
-	
+
 	
 	echo $hmera;
+	
 }
+
+
+
+
+
 
 
 
