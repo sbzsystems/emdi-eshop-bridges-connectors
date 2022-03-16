@@ -1,9 +1,9 @@
-﻿<?php
+<?php
 /*------------------------------------------------------------------------
-		# EMDI - WHMCS BRIDGE by SBZ systems - Solon Zenetzis - version 1.2
+		# EMDI - WHMCS BRIDGE by SBZ systems - Solon Zenetzis - version 1.1
 		# ------------------------------------------------------------------------
 		# author    SBZ systems - Solon Zenetzis
-		# copyright Copyright (C) 2013-2020 sbzsystems.com. All Rights Reserved.
+		# copyright Copyright (C) 2013-2015 sbzsystems.com. All Rights Reserved.
 		# @license - http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL
 		# Websites: http://www.sbzsystems.com
 		# Technical Support:  Forum - http://www.sbzsystems.com
@@ -24,7 +24,7 @@ $action=$_REQUEST['action'];       // PRODUCT CODE
 $orderid=$_REQUEST['orderid'];       // PRODUCT CODE
 $key=$_REQUEST['key'];       // PRODUCT CODE
 $tmp_path=realpath(dirname(__FILE__)).'/templates_c';
-$measure='ΤΕΜΑΧΙΟ';
+$measure='ΤΕΜΑΧΙΑ';
 $customerid=$_REQUEST['customerid'];
 $productid=$_REQUEST['productid'];
 $test=$_REQUEST['test'];
@@ -34,6 +34,7 @@ $relatedchar='^';
 //if (!($key=='')) { exit; }
 
 
+//echo $tmp_path;
 
 
 
@@ -166,9 +167,9 @@ if ($action == 'customers') {
 		}
 		
 		$afm=$alldata['tax_id'];
-		$doy=$field_[3];
+		$doy=$field_[2];
 		$mobile=$field_[4];
-		$epaggelma=$field_[5];
+		$epaggelma=$field_[3];
 		
 		//echo '<br>';
 		
@@ -251,18 +252,39 @@ if ($action == 'products') {
 		$asetupfee=number_format($alldata['asetupfee'], 2, ',', '');
 		
 		if (!($taxrate>0)) { $taxrate=$maintax; }
+		//if (!($taxrate>0)) { $taxrate=0; }	
 		
 		$name=$name1;//.' '.$name2;
 		
+		if ($monthly>0){
+			$price=$monthly;
+		}
+		else if ($annually>0){
+			$price=$annually;
+		}
+		else if ($semiannually>0){
+			$price=$semiannually;
+		}
+		else if ($quarterly>0){
+			$price=$quarterly;
+		}
+		else if ($biennially>0){
+			$price=$biennially;
+		}
+		else{
+			$price=$triennially;
+		}
 		
 		if (($paytype=='onetime') || ($paytype=='free')) {				
-			echo $type.$id.';ΑΔΕΙΑ '.$name.';;'.$taxrate.';'.number_format($monthly, 2, ',', '').";;;".$measure.";".$name2.";<br>\n";		
+			echo $type.$id.';ΑΔΕΙΑ '.$name.';;'.$maintax.';'.number_format($price, 2, ',', '').";;;".$measure.";".$name2.";<br>\n";		
 		} else {
-			echo $type.$id.';'.$name.';;'.$taxrate.';'.number_format($monthly, 2, ',', '').";;;".$measure.";".$name2.";<br>\n";
+			echo $type.$id.';'.$name.';;'.$maintax.';'.number_format($price, 2, ',', '').";;;".$measure.";".$name2.";<br>\n";
 		}
 		
 		
 	}
+	
+	/*
 	////////DOMAINS
 	$data = mysqli_query($link,"SELECT * FROM tbldomainpricing
 		
@@ -296,12 +318,10 @@ if ($action == 'products') {
 		
 		
 		
-		echo $type.';'.$typos.';;'.$taxrate.';'.$fee.';;;'.$periodos.";<br>\n";
+		echo $type.';'.$typos.';;'.$maintax.';'.$fee.';;;'.$periodos.";<br>\n";
 		
 	}
-	
-	
-	
+	*/
 	
 	
 }
@@ -350,8 +370,13 @@ if ($action == 'orders') {
 	else '' end
 	bank
 	
-	
 	,
+	case when status='Paid' then
+	(SELECT acc.transid FROM tblaccounts acc where acc.invoiceid=tblinvoices.id limit 1) 
+	else '' end
+	tranID
+    ,
+
 	case when status='Paid' then
 	(SELECT acc.gateway FROM tblaccounts acc where acc.invoiceid=tblinvoices.id limit 1) 
 	else '' end
@@ -368,6 +393,8 @@ if ($action == 'orders') {
 	
 	FROM tblinvoices 
 	where status<>'Cancelled' 
+	and status='Paid'
+	and `date`>'2022-1-1'
 	and notes='' 
 	
 	and (tax<>0 or (SELECT tblclients.taxexempt FROM tblclients where tblclients.id=tblinvoices.userid)=1) 
@@ -375,7 +402,7 @@ if ($action == 'orders') {
 	and (SELECT tblclients.status FROM tblclients where tblclients.id=tblinvoices.userid)='Active'
 	
 	
-	order by userid,id desc
+	order by userid,id desc,`date` desc
 	";
 	
 	$data = mysqli_query($link,$query) or die(mysqli_error($link)); //
@@ -390,20 +417,29 @@ if ($action == 'orders') {
 		$notes= $alldata['bank'];
 		$payment= $alldata['payment'];
 		$description= $alldata['description'];
-		
-		if ($payment=='banktransfer_alpha') { $payment='ΚΑΤΑΘΕΣΗ - ALPHA'; }
-		if ($payment=='banktransfer_nbg') { $payment='ΚΑΤΑΘΕΣΗ - ΕΘΝΙΚΗ'; }
-		if ($payment=='banktransfer_piraeus') { $payment='ΚΑΤΑΘΕΣΗ - ΠΕΙΡΑΙΩΣ'; }
-		if ($payment=='banktransfer_eurobank') { $payment='ΚΑΤΑΘΕΣΗ - EUROBANK'; }
-		if ($payment=='banktransfer_viva') { $payment='ΚΑΤΑΘΕΣΗ - VIVA WALLET'; }
-		if ($payment=='banktransfer_revolut') { $payment='ΚΑΤΑΘΕΣΗ - REVOLUT'; }
-		if ($payment=='stripe') { $payment='ΚΑΡΤΑ - STRIPE'; }
-		if ($payment=='stripe_prebuilt1') { $payment='ΚΑΡΤΑ - STRIPE'; }
-		if ($payment=='vivapayments') { $payment='ΚΑΡΤΑ - VIVA WALLET'; }
-		if ($payment=='ethniki') { $payment='ΚΑΡΤΑ - ΕΘΝΙΚΗ'; }
+		$tranID=$alldata['tranID'];
+        $notes=$notes.' Transaction ID ='.$tranID.'';
 
+
+
+		//if ($payment=='banktransfer_alpha') { $payment='ΚΑΤΑΘΕΣΗ - ALPHA'; }
+		//if ($payment=='banktransfer_nbg') { $payment='ΚΑΤΑΘΕΣΗ - ΕΘΝΙΚΗ'; }
+		//if ($payment=='banktransfer_piraeus') { $payment='ΚΑΤΑΘΕΣΗ - ΠΕΙΡΑΙΩΣ'; }
+		//if ($payment=='banktransfer_eurobank') { $payment='ΚΑΤΑΘΕΣΗ - EUROBANK'; }
+		//if ($payment=='banktransfer_viva') { $payment='ΚΑΤΑΘΕΣΗ - VIVA WALLET'; }
+		//if ($payment=='banktransfer_revolut') { $payment='ΚΑΤΑΘΕΣΗ - REVOLUT'; }
+		//if ($payment=='stripe') { $payment='ΚΑΡΤΑ - STRIPE'; }
+		//if ($payment=='stripe_prebuilt1') { $payment='ΚΑΡΤΑ - STRIPE'; }
+		//if ($payment=='vivapayments') { $payment='ΚΑΡΤΑ - VIVA WALLET'; }
+		//if ($payment=='ethniki') { $payment='ΚΑΡΤΑ - ΕΘΝΙΚΗ'; }
 		
 		
+		
+		if ($payment=='vivapayments') { $payment='VIVA'; }
+		if ($payment=='paypalcheckout') { $payment='PAYPAL'; }
+		if ($payment=='banktransfer') { $payment='ΚΑΤΑΘΕΣΗ'; }
+		if ($payment=='cash') { $payment='ΜΕΤΡΗΤΑ'; }
+	/*	
 		
 	if ( stripos($description,'host') || 
 	stripos($description,'dedicated') || 
@@ -419,7 +455,7 @@ if ($action == 'orders') {
 		}
 		
 		
-	 
+	*/ 
 		
 		
 		
@@ -462,6 +498,11 @@ if ($action == 'order') {
 		tblhosting.packageid,
 		tblinvoiceitems.description, tblinvoiceitems.amount, tblinvoiceitems.type
 		
+		,(
+         (select tbltax.taxrate from tblinvoicedata,tbltax where tblinvoicedata.invoice_id=tblinvoiceitems.invoiceid and tbltax.country=tblinvoicedata.country limit 1)*taxed         
+         *(case when (SELECT tblclients.taxexempt FROM tblinvoices,tblclients where tblinvoices.userid=tblclients.id and tblinvoices.id=tblinvoiceitems.invoiceid)=1 then 0 else 1 end)         
+         ) tax
+		
 		FROM tblinvoiceitems
 		
 		left join tblhosting 
@@ -492,7 +533,11 @@ if ($action == 'order') {
 		if ($type=='Domain') { $type='DomainRenewal'; }
 		if (substr($type,0,6)<>'Domain') { $type=$type1; }
 		
-		if (!($taxrate>0)) { $taxrate=$maintax; }			
+		//if (!($taxrate>0)) { $taxrate=$maintax; }			
+		//if (!($taxrate>0)) { $taxrate=0; }	
+		$taxrate=$alldata['tax'];
+		
+		
 		
 		$patterns = array();
 		$patterns[0] = '/Client Discount/';
