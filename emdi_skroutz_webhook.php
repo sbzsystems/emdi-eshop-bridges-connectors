@@ -14,7 +14,7 @@ header('Content-Type: text/html; charset=UTF-8');
 
 
 $orderid=$_REQUEST['orderid'];
-$apikey='pZgOMMGuayxwYfd-npnEyWUAKmGqJABecOUAW3nJD34luvBQCh5FG2dNQJeWPmeiLxcD0G6MyGV-oZrYiIVqfQ==';
+$apikey='';
 
 
 
