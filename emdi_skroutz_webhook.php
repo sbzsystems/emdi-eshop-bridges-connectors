@@ -14,12 +14,17 @@ header('Content-Type: text/html; charset=UTF-8');
 
 
 $orderid=$_REQUEST['orderid'];
-$apikey='';
+$apikey='pZgOMMGuayxwYfd-npnEyWUAKmGqJABecOUAW3nJD34luvBQCh5FG2dNQJeWPmeiLxcD0G6MyGV-oZrYiIVqfQ==';
 
 
 
 
-
+function replace_bad($ch) {
+	
+	$ch=str_replace("'","`",$ch);
+	
+	return $ch;
+}
 
 
 
@@ -69,7 +74,6 @@ if ($orderid == 'recheck_pending') {
 	where 
 	state='open' 
 	and created_at>= NOW() - INTERVAL 1 DAY
-
 	") or die(mysqli_error($link)); //
 
 
@@ -139,17 +143,14 @@ if ($orderid == 'recheck_pending') {
 
 		$datacurl = mysqli_query($link,"
 	update `sbz_skroutz_docs` set 
-
 	`created_at`='".date('Y-m-d H:i:s', strtotime($alldatacurl->order->created_at))."',
 	`expires_at`='".date('Y-m-d H:i:s', strtotime($alldatacurl->order->expires_at))."',	
 	`dispatch_until`='".date('Y-m-d H:i:s', strtotime($alldatacurl->order->dispatch_until))."',
-
 	`state`='".$order_state."',
 	`courier`='".$alldatacurl->order->courier."', 
 	`courier_voucher`='".$alldatacurl->order->courier_voucher."', 
 	`courier_tracking_codes`='".$alldatacurl->order->courier_tracking_codes[0]."',
 	`state`='".$alldatacurl->order->state."'
-
 	where code='".$alldatacurl->order->code."'
 	") or die(mysqli_error($link)); //
 
@@ -256,8 +257,6 @@ file_put_contents('smart_cart.log', $message['event_type'].'|'.$message['event_t
 
 
 /*
-
-
 			{
 					"id": "0ngeJNXMk1",
 					"label": "Σοφοκλέους 146, Τ.Κ. 17672, Καλλιθέα, Αττική"
@@ -269,35 +268,27 @@ file_put_contents('smart_cart.log', $message['event_type'].'|'.$message['event_t
 				
 				
 				
-
-
 CREATE TABLE `sbz_skroutz_docs` ( 
-
 `code` VARCHAR(20) NOT NULL , 
 `event_type` VARCHAR(20) NOT NULL , 
 `state` VARCHAR(20) NOT NULL , 
 `customer_id` VARCHAR(20) NOT NULL , 
 `customer_first_name` VARCHAR(50) NOT NULL , 
 `customer_last_name` VARCHAR(50) NOT NULL , 
-
 `customer_address_street_name` VARCHAR(50) NOT NULL , 
 `customer_address_street_number` VARCHAR(20) NOT NULL , 
 `customer_address_street_zip` VARCHAR(20) NOT NULL , 
 `customer_address_street_city` VARCHAR(50) NOT NULL , 
 `customer_address_street_region` VARCHAR(50) NOT NULL , 
 `customer_address_street_pickup_from_collection_point` VARCHAR(200) NOT NULL , 
-
 `invoice` VARCHAR(50) NOT NULL , 
-
 `comments` VARCHAR(500) NOT NULL , 
 `courier` VARCHAR(50) NOT NULL , 
 `courier_voucher` VARCHAR(500) NOT NULL , 
 `courier_tracking_codes` VARCHAR(50) NOT NULL , 
-
 `created_at` TIMESTAMP NOT NULL  , 
 `expires_at` TIMESTAMP NOT NULL  , 
 `dispatch_until` TIMESTAMP NOT NULL  , 
-
 `invoice_company` VARCHAR(100) NOT NULL , 
 `invoice_profession` VARCHAR(100) NOT NULL , 
 `invoice_vat_number` VARCHAR(20) NOT NULL , 
@@ -308,16 +299,9 @@ CREATE TABLE `sbz_skroutz_docs` (
 `invoice_city` VARCHAR(50) NOT NULL , 
 `invoice_region` VARCHAR(50) NOT NULL , 
 `invoice_vat_exclusion` VARCHAR(10) NOT NULL ,  
-
 PRIMARY KEY (`code`)
-
 ) ENGINE = MyISAM CHARSET=utf8 COLLATE utf8_unicode_ci;
-
-
-
-
 CREATE TABLE `sbz_skroutz_lines` ( 
-
 `code` VARCHAR(20) NOT NULL , 
 `id` VARCHAR(20) NOT NULL , 
 `shop_uid` VARCHAR(20) NOT NULL , 
@@ -329,14 +313,10 @@ CREATE TABLE `sbz_skroutz_lines` (
 `unit_price` FLOAT NOT NULL , 
 `total_price` FLOAT NOT NULL , 
 `price_includes_vat` FLOAT NOT NULL , 
-
 PRIMARY KEY (`id`),
 INDEX `shop_uid` (`shop_uid`),
 INDEX `code` (`code`)
-
 ) ENGINE = MyISAM CHARSET=utf8 COLLATE utf8_unicode_ci;
-
-
 */
 
 
@@ -415,16 +395,16 @@ $query="
 										`invoice_zip`, `invoice_city`, `invoice_region`, 
 										`invoice_vat_exclusion`
 										) 
-								VALUES ('".$alldata->order->code."', '".$order_state."', '".$alldata->order->customer->id."', '".$alldata->order->customer->first_name."', '".$alldata->order->customer->last_name."', 
-										'".$alldata->order->customer->address->street_name."','".$alldata->order->customer->address->street_number."', '".$alldata->order->customer->address->zip."','".$alldata->order->customer->address->city."', 
-										'".$alldata->order->customer->address->region."','".$alldata->order->customer->address->collection_point_address."', 
-										'".$alldata->order->invoice."', '".$alldata->order->comments."','".$alldata->order->courier."', '".$alldata->order->courier_voucher."', '".$alldata->order->courier_tracking_codes[0]."', 
+								VALUES ('".$alldata->order->code."', '".$order_state."', '".$alldata->order->customer->id."', '".replace_bad($alldata->order->customer->first_name)."', '".replace_bad($alldata->order->customer->last_name)."', 
+										'".replace_bad($alldata->order->customer->address->street_name)."','".$alldata->order->customer->address->street_number."', '".$alldata->order->customer->address->zip."','".replace_bad($alldata->order->customer->address->city)."', 
+										'".replace_bad($alldata->order->customer->address->region)."','".replace_bad($alldata->order->customer->address->collection_point_address)."', 
+										'".$alldata->order->invoice."', '".replace_bad($alldata->order->comments)."','".$alldata->order->courier."', '".$alldata->order->courier_voucher."', '".$alldata->order->courier_tracking_codes[0]."', 
 										'".date('Y-m-d H:i:s', strtotime($alldata->order->created_at))."','".date('Y-m-d H:i:s', strtotime($alldata->order->expires_at))."','".date('Y-m-d H:i:s', strtotime($alldata->order->dispatch_until))."'
 										,'".$event_type."'
 										
-										, '".$alldata->order->invoice_details->company."', '".$alldata->order->invoice_details->profession."', '".$alldata->order->invoice_details->vat_number."'
-										, '".$alldata->order->invoice_details->doy."', '".$alldata->order->invoice_details->address->street_name."', '".$alldata->order->invoice_details->address->street_number."'
-										, '".$alldata->order->invoice_details->address->zip."', '".$alldata->order->invoice_details->address->city."', '".$alldata->order->invoice_details->address->region."'
+										, '".replace_bad($alldata->order->invoice_details->company)."', '".replace_bad($alldata->order->invoice_details->profession)."', '".$alldata->order->invoice_details->vat_number."'
+										, '".replace_bad($alldata->order->invoice_details->doy)."', '".replace_bad($alldata->order->invoice_details->address->street_name)."', '".$alldata->order->invoice_details->address->street_number."'
+										, '".$alldata->order->invoice_details->address->zip."', '".replace_bad($alldata->order->invoice_details->address->city)."', '".replace_bad($alldata->order->invoice_details->address->region)."'
 										, '".$alldata->order->invoice_details->vat_exclusion_requested."'
 										)
 		
@@ -451,12 +431,14 @@ foreach ($alldata->order->line_items as $value) {
 	$query="
 		
 		INSERT INTO `sbz_skroutz_lines` (`code`, `id`, `shop_uid`, `product_name`, `quantity`, `size_label`, `size_value` , `shop_value`, `unit_price` , `total_price` , `price_includes_vat` ) 
-								VALUES ('".$alldata->order->code."', '".$value->id."', '".$value->shop_uid."', '".$value->product_name."', ".$value->quantity.", 
+								VALUES ('".$alldata->order->code."', '".$value->id."', '".$value->shop_uid."', '".replace_bad($value->product_name)."', ".$value->quantity.", 
 										'".$value->size->label."','".$value->size->value."','".$value->size->shop_value."',".$value->unit_price.",".$value->total_price.",".$value->price_includes_vat." 
 										) 
 		ON DUPLICATE KEY UPDATE `code`='".$alldata->order->code."'
 		
 		";
+	
+	file_put_contents('smart_cart.log',$query."\n", FILE_APPEND | LOCK_EX);
 	/////////////
 	$data = mysqli_query($link,$query) or die(mysqli_error($link));;
 	
@@ -538,16 +520,16 @@ if ($num_tags>2) {
 										`invoice_zip`, `invoice_city`, `invoice_region`, 
 										`invoice_vat_exclusion`
 										) 
-								VALUES ('".$alldata->order->code."', '".$order_state."', '".$alldata->order->customer->id."', '".$alldata->order->customer->first_name."', '".$alldata->order->customer->last_name."', 
-										'".$alldata->order->customer->address->street_name."','".$alldata->order->customer->address->street_number."', '".$alldata->order->customer->address->zip."','".$alldata->order->customer->address->city."', 
-										'".$alldata->order->customer->address->region."','".$alldata->order->customer->address->collection_point_address."', 
-										'".$alldata->order->invoice."', '".$alldata->order->comments."','".$alldata->order->courier."', '".$alldata->order->courier_voucher."', '".$alldata->order->courier_tracking_codes[0]."', 
+								VALUES ('".$alldata->order->code."', '".$order_state."', '".$alldata->order->customer->id."', '".replace_bad($alldata->order->customer->first_name)."', '".replace_bad($alldata->order->customer->last_name)."', 
+										'".replace_bad($alldata->order->customer->address->street_name)."','".$alldata->order->customer->address->street_number."', '".$alldata->order->customer->address->zip."','".replace_bad($alldata->order->customer->address->city)."', 
+										'".replace_bad($alldata->order->customer->address->region)."','".replace_bad($alldata->order->customer->address->collection_point_address)."', 
+										'".$alldata->order->invoice."', '".replace_bad($alldata->order->comments)."','".$alldata->order->courier."', '".$alldata->order->courier_voucher."', '".$alldata->order->courier_tracking_codes[0]."', 
 										'".date('Y-m-d H:i:s', strtotime($alldata->order->created_at))."','".date('Y-m-d H:i:s', strtotime($alldata->order->expires_at))."','".date('Y-m-d H:i:s', strtotime($alldata->order->dispatch_until))."'
 										,'".$event_type."'
 										
-										, '".$alldata->order->invoice_details->company."', '".$alldata->order->invoice_details->profession."', '".$alldata->order->invoice_details->vat_number."'
-										, '".$alldata->order->invoice_details->doy."', '".$alldata->order->invoice_details->address->street_name."', '".$alldata->order->invoice_details->address->street_number."'
-										, '".$alldata->order->invoice_details->address->zip."', '".$alldata->order->invoice_details->address->city."', '".$alldata->order->invoice_details->address->region."'
+										, '".replace_bad($alldata->order->invoice_details->company)."', '".replace_bad($alldata->order->invoice_details->profession)."', '".$alldata->order->invoice_details->vat_number."'
+										, '".replace_bad($alldata->order->invoice_details->doy)."', '".replace_bad($alldata->order->invoice_details->address->street_name)."', '".$alldata->order->invoice_details->address->street_number."'
+										, '".$alldata->order->invoice_details->address->zip."', '".replace_bad($alldata->order->invoice_details->address->city)."', '".replace_bad($alldata->order->invoice_details->address->region)."'
 										, '".$alldata->order->invoice_details->vat_exclusion_requested."'
 										)
 		
@@ -574,12 +556,14 @@ if ($num_tags>2) {
 		$query="
 		
 		INSERT INTO `sbz_skroutz_lines` (`code`, `id`, `shop_uid`, `product_name`, `quantity`, `size_label`, `size_value` , `shop_value`, `unit_price` , `total_price` , `price_includes_vat` ) 
-								VALUES ('".$alldata->order->code."', '".$value->id."', '".$value->shop_uid."', '".$value->product_name."', ".$value->quantity.", 
+								VALUES ('".$alldata->order->code."', '".$value->id."', '".$value->shop_uid."', '".replace_bad($value->product_name)."', ".$value->quantity.", 
 										'".$value->size->label."','".$value->size->value."','".$value->size->shop_value."',".$value->unit_price.",".$value->total_price.",".$value->price_includes_vat." 
 										) 
 		ON DUPLICATE KEY UPDATE `code`='".$alldata->order->code."'
 		
 		";
+		
+		file_put_contents('smart_cart.log',$query."\n", FILE_APPEND | LOCK_EX);
 		/////////////
 		$data = mysqli_query($link,$query) or die(mysqli_error($link));;
 		
@@ -680,4 +664,4 @@ mysqli_close($link);
 //echo 'ok';
 
 
-?> 					
+?>
