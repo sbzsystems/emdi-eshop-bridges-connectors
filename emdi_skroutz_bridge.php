@@ -373,10 +373,17 @@ and code<>''
 		}
 		
 		
+		$parastatiko='';
+		
+		if ($invoice=='1') {
+			$parastatiko='ΤΙΜΟΛΟΓΙΟ - ΔΕΛΤΙΟ ΑΠΟΣΤΟΛΗΣ';
+		} else {
+			$parastatiko='ΑΠΟΔΕΙΞΗ ΛΙΑΝΙΚΗΣ ΠΩΛΗΣΗΣ';
+		}
 		
 
 		
-		$rowtext= $id.';'.$maincust.";0;0;0;".$hmera.";".$comment.";;".$voucher.";;".$deliverycust.";ΚΑΡΤΑ;COURIER SKROUTZ;;";		
+		$rowtext= $order_id_prefix.$id.';'.$maincust.";0;0;0;".$hmera.";".$comment.";;".$voucher.";;".$deliverycust.";ΚΑΡΤΑ;COURIER SKROUTZ;".$parastatiko.";";		
 		$rowtext = str_ireplace("&amp;", "&", $rowtext);
 		$rowtext = str_ireplace("&quot;", "'", $rowtext);
 		$rowtext = str_ireplace("&#039;", "'", $rowtext);
