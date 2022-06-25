@@ -1,9 +1,9 @@
 <?php
 /*------------------------------------------------------------------------
-		# SKROUTZ BRIDGE by SBZ systems - Solon Zenetzis - version 1.0
+		# SKROUTZ BRIDGE by SBZ systems - Solon Zenetzis - version 1.1
 		# ------------------------------------------------------------------------
 		# author    SBZ systems - Solon Zenetzis
-		# copyright Copyright (C) 2021 sbzsystems.com. All Rights Reserved.
+		# copyright Copyright (C) 2022 sbzsystems.com. All Rights Reserved.
 		# @license - http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL
 		# Websites: http://www.sbzsystems.com
 		# Technical Support:  Forum - http://www.sbzsystems.com
