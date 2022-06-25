@@ -1,14 +1,13 @@
 <?php
-//PS
 /*------------------------------------------------------------------------
-		# EMDI - SKROUTZ BRIDGE by SBZ systems - Solon Zenetzis - version 1.5
-		# ------------------------------------------------------------------------
-		# author    SBZ systems - Solon Zenetzis
-		# copyright Copyright (C) 2021 sbzsystems.com. All Rights Reserved.
-		# @license - http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL
-		# Websites: http://www.sbzsystems.com
-		# Technical Support:  Forum - http://www.sbzsystems.com
-	-------------------------------------------------------------------------*/
+# EMDI - SKROUTZ BRIDGE by SBZ systems - Solon Zenetzis - version 1.6
+# ------------------------------------------------------------------------
+# author    SBZ systems
+# copyright Copyright (C) 2022 sbzsystems.com. All Rights Reserved.
+# @license - http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL
+# Websites: http://www.sbzsystems.com
+# Technical Support:  Forum - http://www.sbzsystems.com
+-------------------------------------------------------------------------*/
 
 header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 header('Content-Type: text/html; charset=UTF-8');
@@ -382,6 +381,7 @@ and code<>''
 		}
 		
 
+		if ($alldata['express']) { $comment=$comment.' - EXPRESS'; } 
 		
 		$rowtext= $order_id_prefix.$id.';'.$maincust.";0;0;0;".$hmera.";".$comment.";;".$voucher.";;".$deliverycust.";ΚΑΡΤΑ;COURIER SKROUTZ;".$parastatiko.";";		
 		$rowtext = str_ireplace("&amp;", "&", $rowtext);
