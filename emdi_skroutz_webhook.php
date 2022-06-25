@@ -281,7 +281,7 @@ CREATE TABLE `sbz_skroutz_docs` (
 `customer_address_street_city` VARCHAR(50) NOT NULL , 
 `customer_address_street_region` VARCHAR(50) NOT NULL , 
 `customer_address_street_pickup_from_collection_point` VARCHAR(200) NOT NULL , 
-`invoice` VARCHAR(50) NOT NULL , 
+`invoice` VARCHAR(5) NOT NULL , 
 `comments` VARCHAR(500) NOT NULL , 
 `courier` VARCHAR(50) NOT NULL , 
 `courier_voucher` VARCHAR(500) NOT NULL , 
@@ -299,6 +299,9 @@ CREATE TABLE `sbz_skroutz_docs` (
 `invoice_city` VARCHAR(50) NOT NULL , 
 `invoice_region` VARCHAR(50) NOT NULL , 
 `invoice_vat_exclusion` VARCHAR(10) NOT NULL ,  
+`express` VARCHAR(5) NOT NULL , 
+`gift_wrap` VARCHAR(5) NOT NULL , 
+`fulfilled_by_skroutz` VARCHAR(5) NOT NULL , 
 PRIMARY KEY (`code`)
 ) ENGINE = MyISAM CHARSET=utf8 COLLATE utf8_unicode_ci;
 CREATE TABLE `sbz_skroutz_lines` ( 
@@ -394,6 +397,8 @@ $query="
 										`invoice_doy`, `invoice_street_name`, `invoice_street_number`, 
 										`invoice_zip`, `invoice_city`, `invoice_region`, 
 										`invoice_vat_exclusion`
+
+                                      	,`express`,`gift_wrap`,`fulfilled_by_skroutz`
 										) 
 								VALUES ('".$alldata->order->code."', '".$order_state."', '".$alldata->order->customer->id."', '".replace_bad($alldata->order->customer->first_name)."', '".replace_bad($alldata->order->customer->last_name)."', 
 										'".replace_bad($alldata->order->customer->address->street_name)."','".$alldata->order->customer->address->street_number."', '".$alldata->order->customer->address->zip."','".replace_bad($alldata->order->customer->address->city)."', 
@@ -406,7 +411,9 @@ $query="
 										, '".replace_bad($alldata->order->invoice_details->doy)."', '".replace_bad($alldata->order->invoice_details->address->street_name)."', '".$alldata->order->invoice_details->address->street_number."'
 										, '".$alldata->order->invoice_details->address->zip."', '".replace_bad($alldata->order->invoice_details->address->city)."', '".replace_bad($alldata->order->invoice_details->address->region)."'
 										, '".$alldata->order->invoice_details->vat_exclusion_requested."'
-										)
+										
+                                        ,'".$alldata->order->express."','".$alldata->order->gift_wrap."','".$alldata->order->fulfilled_by_skroutz."'
+                                        )
 		
 		ON DUPLICATE KEY UPDATE `state`='".$order_state."',`courier`='".$alldata->order->courier."', `courier_voucher`='".$alldata->order->courier_voucher."', 
 								`courier_tracking_codes`='".$alldata->order->courier_tracking_codes[0]."',`event_type`='".$event_type."'
@@ -519,6 +526,8 @@ if ($num_tags>2) {
 										`invoice_doy`, `invoice_street_name`, `invoice_street_number`, 
 										`invoice_zip`, `invoice_city`, `invoice_region`, 
 										`invoice_vat_exclusion`
+
+                                        ,`express`,`gift_wrap`,`fulfilled_by_skroutz`
 										) 
 								VALUES ('".$alldata->order->code."', '".$order_state."', '".$alldata->order->customer->id."', '".replace_bad($alldata->order->customer->first_name)."', '".replace_bad($alldata->order->customer->last_name)."', 
 										'".replace_bad($alldata->order->customer->address->street_name)."','".$alldata->order->customer->address->street_number."', '".$alldata->order->customer->address->zip."','".replace_bad($alldata->order->customer->address->city)."', 
@@ -531,7 +540,9 @@ if ($num_tags>2) {
 										, '".replace_bad($alldata->order->invoice_details->doy)."', '".replace_bad($alldata->order->invoice_details->address->street_name)."', '".$alldata->order->invoice_details->address->street_number."'
 										, '".$alldata->order->invoice_details->address->zip."', '".replace_bad($alldata->order->invoice_details->address->city)."', '".replace_bad($alldata->order->invoice_details->address->region)."'
 										, '".$alldata->order->invoice_details->vat_exclusion_requested."'
-										)
+										
+                                        ,'".$alldata->order->express."','".$alldata->order->gift_wrap."','".$alldata->order->fulfilled_by_skroutz."'
+                                        )
 		
 		ON DUPLICATE KEY UPDATE `state`='".$order_state."',`courier`='".$alldata->order->courier."', `courier_voucher`='".$alldata->order->courier_voucher."', 
 								`courier_tracking_codes`='".$alldata->order->courier_tracking_codes[0]."',`event_type`='".$event_type."'
@@ -573,94 +584,11 @@ if ($num_tags>2) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 mysqli_close($link);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //echo 'ok';
 
 
