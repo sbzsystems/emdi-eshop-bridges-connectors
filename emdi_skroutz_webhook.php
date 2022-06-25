@@ -257,16 +257,6 @@ file_put_contents('smart_cart.log', $message['event_type'].'|'.$message['event_t
 
 
 /*
-			{
-					"id": "0ngeJNXMk1",
-					"label": "Σοφοκλέους 146, Τ.Κ. 17672, Καλλιθέα, Αττική"
-				},
-				{
-					"id": "rbgjjLQgeo",
-					"label": "Αχιλλέως 16, Τ.Κ. 17674, Καλλιθέα, Αττική"
-				}
-				
-				
 				
 CREATE TABLE `sbz_skroutz_docs` ( 
 `code` VARCHAR(20) NOT NULL , 
@@ -304,6 +294,7 @@ CREATE TABLE `sbz_skroutz_docs` (
 `fulfilled_by_skroutz` VARCHAR(5) NOT NULL , 
 PRIMARY KEY (`code`)
 ) ENGINE = MyISAM CHARSET=utf8 COLLATE utf8_unicode_ci;
+
 CREATE TABLE `sbz_skroutz_lines` ( 
 `code` VARCHAR(20) NOT NULL , 
 `id` VARCHAR(20) NOT NULL , 
@@ -320,10 +311,8 @@ PRIMARY KEY (`id`),
 INDEX `shop_uid` (`shop_uid`),
 INDEX `code` (`code`)
 ) ENGINE = MyISAM CHARSET=utf8 COLLATE utf8_unicode_ci;
+
 */
-
-
-
 
 
 require 'config.php';
@@ -421,7 +410,7 @@ $query="
 		";
 
 
-//echo $query;           $alldata->order->state
+
 
 /////////////
 
