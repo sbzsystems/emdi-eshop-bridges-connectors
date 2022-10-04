@@ -14,7 +14,7 @@ header('Content-Type: text/html; charset=UTF-8');
 
 
 $orderid=$_REQUEST['orderid'];
-$apikey='';
+$apikey='vN7jw5dVdSoqoopqN5W1tTVVs-Jl_yPFhT1D0px23LQdOJux3U7TB0H1IDf73V4MbmNOhdGixAiSBwQk53AfXg==';
 
 
 
@@ -321,7 +321,6 @@ $query="
 										`invoice_doy`, `invoice_street_name`, `invoice_street_number`, 
 										`invoice_zip`, `invoice_city`, `invoice_region`, 
 										`invoice_vat_exclusion`
-
                                       	,`express`,`gift_wrap`,`fulfilled_by_skroutz`
 										) 
 								VALUES ('".$alldata->order->code."', '".$order_state."', '".$alldata->order->customer->id."', '".replace_bad($alldata->order->customer->first_name)."', '".replace_bad($alldata->order->customer->last_name)."', 
@@ -344,7 +343,7 @@ $query="
 		
 		";
 
-
+//echo $query;
 
 
 /////////////
@@ -450,7 +449,6 @@ if ($num_tags>2) {
 										`invoice_doy`, `invoice_street_name`, `invoice_street_number`, 
 										`invoice_zip`, `invoice_city`, `invoice_region`, 
 										`invoice_vat_exclusion`
-
                                         ,`express`,`gift_wrap`,`fulfilled_by_skroutz`
 										) 
 								VALUES ('".$alldata->order->code."', '".$order_state."', '".$alldata->order->customer->id."', '".replace_bad($alldata->order->customer->first_name)."', '".replace_bad($alldata->order->customer->last_name)."', 
@@ -513,7 +511,7 @@ if ($num_tags>2) {
 
 
 mysqli_close($link);
-//echo 'ok';
+echo 'ok';
 
 
 ?>
