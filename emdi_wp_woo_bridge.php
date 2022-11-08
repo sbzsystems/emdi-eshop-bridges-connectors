@@ -819,6 +819,11 @@ if ($action == 'updatestock') {
 	if ( function_exists( 'rocket_clean_domain' ) ) {
 		rocket_clean_domain();
 	}
+	
+	
+	
+	//ΓΙΑ REDIS OBJECT CACHE - ΚΑΘΑΡΙΣΜΑ CACHE
+	return $wp_object_cache->redis_instance()->flushall();
 
 
 	
