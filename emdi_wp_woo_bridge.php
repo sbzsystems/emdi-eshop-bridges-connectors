@@ -823,7 +823,9 @@ if ($action == 'updatestock') {
 	
 	
 	//ΓΙΑ REDIS OBJECT CACHE - ΚΑΘΑΡΙΣΜΑ CACHE
-	return $wp_object_cache->redis_instance()->flushdb();
+	if ( function_exists( 'wp_cache_flush' ) ) {
+	return $wp_object_cache->flush();
+	}
 
 
 	
