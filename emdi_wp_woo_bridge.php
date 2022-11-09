@@ -678,6 +678,21 @@ if ($action == 'confirmorder') {
 	//('wc-completed','wc-cancelled
 	$data = mysqli_query($link,"update ".$dbprefix."posts set post_status='wc-completed' where ID in (".$orderid.")") or die(mysqli_error($link));
 	
+	
+	//ΓΙΑ WP-ROCKET - ΚΑΘΑΡΙΣΜΑ CACHE
+	require( 'wp-load.php' );
+	// Clear cache.
+	if ( function_exists( 'rocket_clean_post' ) ) {
+		//rocket_clean_domain();		
+		rocket_clean_post( $orderid );
+	}
+	
+	//ΓΙΑ REDIS OBJECT CACHE - ΚΑΘΑΡΙΣΜΑ CACHE
+	if ( function_exists( 'wp_cache_flush' ) ) {
+	return $wp_object_cache->flush();
+	}
+	
+	
 	echo $hmera;
 }
 
@@ -805,28 +820,22 @@ if ($action == 'updatestock') {
 		
 		
 	}
-	
-	
-	
-	
-	
-	
-	
+
 	
 	//ΓΙΑ WP-ROCKET - ΚΑΘΑΡΙΣΜΑ CACHE
 	require( 'wp-load.php' );
 	// Clear cache.
-	if ( function_exists( 'rocket_clean_domain' ) ) {
-		rocket_clean_domain();
+	if ( function_exists( 'rocket_clean_post' ) ) {
+		//rocket_clean_domain();		
+		rocket_clean_post( $post_id );
+		rocket_clean_post( $post_id_parent );
 	}
-	
 	
 	
 	//ΓΙΑ REDIS OBJECT CACHE - ΚΑΘΑΡΙΣΜΑ CACHE
 	if ( function_exists( 'wp_cache_flush' ) ) {
 	return $wp_object_cache->flush();
 	}
-
 
 	
 }
