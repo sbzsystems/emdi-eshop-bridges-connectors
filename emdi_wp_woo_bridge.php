@@ -813,7 +813,7 @@ if ($action == 'updatestock') {
 	}
 	
 	
-	//G?? WP-ROCKET - ??T???S?? CACHE
+	//ROCKET CACHE
 	require( 'wp-load.php' );
 	// Clear cache.
 	if ( function_exists( 'rocket_clean_post' ) ) {
@@ -823,7 +823,7 @@ if ($action == 'updatestock') {
 	}
 	
 	
-	//G?? REDIS OBJECT CACHE - ??T???S?? CACHE
+	//REDIS CACHE
 	if ( function_exists( 'wp_cache_flush' ) ) {
 	return $wp_object_cache->flush();
 	}
