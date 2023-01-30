@@ -703,126 +703,117 @@ if ($action == 'confirmorder') {
 
 
 if ($action == 'updatestock') {
-	//echo "update ".$dbprefix."product set quantity=".$stock."  where product_id='".substr($productid,strlen($product_code_prefix))."'";
 	
-	//find meta
-	$query="select pom.post_id from ".$dbprefix."postmeta pom where pom.meta_key='_sku' and pom.meta_value='".substr($productid,strlen($product_code_prefix))."'";
-	//file_put_contents($logfile, $query."\n", FILE_APPEND | LOCK_EX);
-	
-	$data2 = mysqli_query($link,$query) or die(mysqli_error($link));
-	//file_put_contents($logfile, '#'.$post_id.'#'.$stock."#\n", FILE_APPEND | LOCK_EX);		
-	while($alldata2 = mysqli_fetch_array( $data2 ))
+	//find post id
+	$query="select pom.post_id from ".$dbprefix."postmeta pom where pom.meta_key='_sku' and pom.meta_value='".$productid."'";
+	$data = mysqli_query($link,$query) or die(mysqli_error($link));
+	while($alldata = mysqli_fetch_array( $data ))
 	{
-		$post_id = $alldata2['post_id'];   	 
-		
-		
-		//update child stock
-		$query="update ".$dbprefix."postmeta pom set pom.meta_value='".$stock."' where pom.meta_key='_stock' and pom.post_id=".$post_id;
-		$data = mysqli_query($link,$query) or die(mysqli_error($link));
-		
-		
-		
-		
-		if ($stock>0) {
-			$query="update ".$dbprefix."postmeta pos set pos.meta_value='instock' where pos.meta_key='_stock_status' and pos.post_id=".$post_id;
-		} else {
-			$query="update ".$dbprefix."postmeta pos set pos.meta_value='outofstock' where pos.meta_key='_stock_status' and pos.post_id=".$post_id;
-		}		
-		$data = mysqli_query($link,$query) or die(mysqli_error($link));
-		
-		
-		//wp_wc_product_meta_lookup - ΝΕΟΣ ΠΙΝΑΚΑΣ??
-		if ($stock>0) {
-			$query="update ".$dbprefix."wc_product_meta_lookup pos set pos.stock_quantity=$stock, pos.stock_status='instock' where pos.product_id=".$post_id;
-		} else {
-			$query="update ".$dbprefix."wc_product_meta_lookup pos set pos.stock_quantity=$stock, pos.stock_status='outofstock' where pos.product_id=".$post_id;			
-		}
-		$data = mysqli_query($link,$query) or die(mysqli_error($link));
-		
-		
-		
+		$post_id = $alldata['post_id'];
 		
 		//find parent
 		$query_parent="select pos.post_parent from ".$dbprefix."posts pos where pos.ID=".$post_id;
-		
-		
-		
 		$data_parent = mysqli_query($link,$query_parent) or die(mysqli_error($link));
 		while($alldata = mysqli_fetch_array( $data_parent ))
 		{
-			$post_id_parent = $alldata['post_parent'];   	 
+			$post_id_parent = $alldata['post_parent'];
 		}
 		
-		
-		
-		//file_put_contents($logfile,'Parent:'. $query."\n", FILE_APPEND | LOCK_EX);
-		if ($post_id_parent==0) { exit; }
-		
-		//get all child stock
-		$query_child="select pos.ID from ".$dbprefix."posts pos where pos.post_parent=".$post_id_parent;
-		$data_child = mysqli_query($link,$query_child) or die(mysqli_error($link));
-		$x=0;
-		while($alldata = mysqli_fetch_array( $data_child ))
-		{
-			$post_id_child[$x] = $alldata['ID'];
-			$x+=1;
-		}
-		$y=$x;
-		
-		
-		//file_put_contents($logfile,'childstock no:'. $y."\n", FILE_APPEND | LOCK_EX);
-		
-		
-		//get all child new stock
-		$x=0;
-		while($x<$y)
-		{
-			$query="select pom.meta_value from ".$dbprefix."postmeta pom where pom.meta_key='_stock' and pom.post_id='".$post_id_child[$x]."'";
-			$data = mysqli_query($link,$query) or die(mysqli_error($link));		
-			while($alldata = mysqli_fetch_array( $data ))
-			{
-				$new_stock[$x] = $alldata['meta_value'];
+		//if is child
+		if ($post_id_parent) {
+			
+			//update child
+			$query="update ".$dbprefix."postmeta pom set pom.meta_value='".$stock."' where pom.meta_key='_stock' and pom.post_id=".$post_id;
+			$data = mysqli_query($link,$query) or die(mysqli_error($link));
+			if ($stock>0) {
+				$query="update ".$dbprefix."postmeta pos set pos.meta_value='instock' where pos.meta_key='_stock_status' and pos.post_id=".$post_id;
+			} else {
+				$query="update ".$dbprefix."postmeta pos set pos.meta_value='outofstock' where pos.meta_key='_stock_status' and pos.post_id=".$post_id;
+			}		
+			$data = mysqli_query($link,$query) or die(mysqli_error($link));
+			if ($stock>0) {
+				$query="update ".$dbprefix."wc_product_meta_lookup pos set pos.stock_quantity=".$stock.", pos.stock_status='instock' where pos.product_id=".$post_id;
+			} else {
+				$query="update ".$dbprefix."wc_product_meta_lookup pos set pos.stock_quantity=".$stock.", pos.stock_status='outofstock' where pos.product_id=".$post_id;
 			}
-			$x+=1;
+			$data = mysqli_query($link,$query) or die(mysqli_error($link));
+			
+			//get all child post_id
+			$query_child="select pos.ID from ".$dbprefix."posts pos where pos.post_parent=".$post_id_parent;
+			$data_child = mysqli_query($link,$query_child) or die(mysqli_error($link));
+			$x=0;
+			while($alldata = mysqli_fetch_array( $data_child ))
+			{
+				$post_id_child[$x] = $alldata['ID'];
+				$x+=1;
+				$haschild=1;
+			}
+			$y=$x;
+			
+			//get all child stock
+			$x=0;
+			while($x<$y)
+			{
+				$query="select pom.meta_value from ".$dbprefix."postmeta pom where pom.meta_key='_stock' and pom.post_id='".$post_id_child[$x]."'";
+				$data = mysqli_query($link,$query) or die(mysqli_error($link));		
+				while($alldata = mysqli_fetch_array( $data ))
+				{
+					$new_stock[$x] = $alldata['meta_value'];
+				}
+				$x+=1;
+			}
+			
+			//set parent new stock
+			$stock_parent=0;
+			$x=0;
+			while($x<$y)
+			{
+				$stock_parent=$stock_parent+$new_stock[$x];
+				$x+=1;
+			}
+			
+			//update parent
+			$query_parent="update ".$dbprefix."postmeta pom set pom.meta_value='".$stock_parent."' where pom.meta_key='_stock' and pom.post_id=".$post_id_parent;
+			$data_parent = mysqli_query($link,$query_parent) or die(mysqli_error($link));
+			if ($stock_parent>0) {
+				$query="update ".$dbprefix."postmeta pos set pos.meta_value='instock' where pos.meta_key='_stock_status' and pos.post_id=".$post_id_parent;
+			} else {
+				$query="update ".$dbprefix."postmeta pos set pos.meta_value='outofstock' where pos.meta_key='_stock_status' and pos.post_id=".$post_id_parent;
+			}
+			$data = mysqli_query($link,$query) or die(mysqli_error($link));
+			if ($stock_parent>0) {
+				$query="update ".$dbprefix."wc_product_meta_lookup pos set pos.stock_quantity=".$stock_parent.", pos.stock_status='instock' where pos.product_id=".$post_id_parent;
+			} else {
+				$query="update ".$dbprefix."wc_product_meta_lookup pos set pos.stock_quantity=".$stock_parent.", pos.stock_status='outofstock' where pos.product_id=".$post_id_parent;
+			}
+			$data = mysqli_query($link,$query) or die(mysqli_error($link));
+			
 		}
-		
-		
-		//set parent new stock
-		$stock_parent=0;
-		$x=0;
-		while($x<$y)
-		{
-			$stock_parent=$stock_parent+$new_stock[$x];
-			$x+=1;
+		//if is parent
+		else{
+			
+			$query="update ".$dbprefix."postmeta pom set pom.meta_value='".$stock."' where pom.meta_key='_stock' and pom.post_id=".$post_id;
+			$data = mysqli_query($link,$query) or die(mysqli_error($link));
+			if ($stock>0) {
+				$query="update ".$dbprefix."postmeta pos set pos.meta_value='instock' where pos.meta_key='_stock_status' and pos.post_id=".$post_id;
+			} else {
+				$query="update ".$dbprefix."postmeta pos set pos.meta_value='outofstock' where pos.meta_key='_stock_status' and pos.post_id=".$post_id;
+			}		
+			$data = mysqli_query($link,$query) or die(mysqli_error($link));
+			if ($stock>0) {
+				$query="update ".$dbprefix."wc_product_meta_lookup pos set pos.stock_quantity=".$stock.", pos.stock_status='instock' where pos.product_id=".$post_id;
+			} else {
+				$query="update ".$dbprefix."wc_product_meta_lookup pos set pos.stock_quantity=".$stock.", pos.stock_status='outofstock' where pos.product_id=".$post_id;
+			}
+			$data = mysqli_query($link,$query) or die(mysqli_error($link));
+			
 		}
-		
-		//file_put_contents($logfile,$query."\n", FILE_APPEND | LOCK_EX);
-		//file_put_contents($logfile,'parent new stock:'. $stock_parent."\n", FILE_APPEND | LOCK_EX);
-		
-		
-		//update parent
-		$query_parent="update ".$dbprefix."postmeta pom set pom.meta_value='".$stock_parent."' where pom.meta_key='_stock' and pom.post_id=".$post_id_parent;
-		$data_parent = mysqli_query($link,$query_parent) or die(mysqli_error($link));
-		
-		file_put_contents($logfile,$query_parent."\n", FILE_APPEND | LOCK_EX);
-		
-		
-		
-		if ($stock_parent>0) {
-			$query="update ".$dbprefix."postmeta pos set pos.meta_value='instock' where pos.meta_key='_stock_status' and pos.post_id=".$post_id_parent;
-		} else {
-			$query="update ".$dbprefix."postmeta pos set pos.meta_value='outofstock' where pos.meta_key='_stock_status' and pos.post_id=".$post_id_parent;
-		}		
-		
-		file_put_contents($logfile,$query."\n", FILE_APPEND | LOCK_EX);
-		
-		$data = mysqli_query($link,$query) or die(mysqli_error($link));
 		
 		
 	}
-
 	
-	//ΓΙΑ WP-ROCKET - ΚΑΘΑΡΙΣΜΑ CACHE
+	
+	//G?? WP-ROCKET - ??T???S?? CACHE
 	require( 'wp-load.php' );
 	// Clear cache.
 	if ( function_exists( 'rocket_clean_post' ) ) {
@@ -832,11 +823,11 @@ if ($action == 'updatestock') {
 	}
 	
 	
-	//ΓΙΑ REDIS OBJECT CACHE - ΚΑΘΑΡΙΣΜΑ CACHE
+	//G?? REDIS OBJECT CACHE - ??T???S?? CACHE
 	if ( function_exists( 'wp_cache_flush' ) ) {
 	return $wp_object_cache->flush();
 	}
-
+	
 	
 }
 
