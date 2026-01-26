@@ -356,9 +356,44 @@ and code<>''
 		$comment=$alldata['comment'].''.$alldata['courier'];
 		//$voucher=$alldata['courier_tracking'];
 		$invoice=$alldata['invoice'];
+		$courier_company=$alldata['courier'];
 		$courier_voucher=$alldata['courier_voucher'];
 		$courier_tracking_codes=$alldata['courier_tracking_codes'];
 		$voucher=$courier_tracking_codes.'|'.$courier_voucher;
+
+		$payment_method=$alldata['payment_method'];
+		
+		if ($payment_method=='card'){
+		$payment_method='ΚΑΡΤΑ';
+		}
+		
+		if ($payment_method=='cash_on_delivery'){
+		$payment_method='ΑΝΤΙΚΑΤΑΒΟΛΗ';
+		}
+		
+		if ($payment_method=='bank_transfer'){
+		$payment_method='ΤΡΑΠΕΖΙΚΗ ΚΑΤΑΘΕΣΗ';
+		}
+		
+		if ($payment_method=='iris'){
+		$payment_method='IRIS';
+		}
+		
+		if ($payment_method=='revolut'){
+		$payment_method='ΚΑΡΤΑ';
+		}
+		
+		if ($payment_method=='wallet'){
+		$payment_method='ΚΑΡΤΑ';
+		}
+		
+		if ($payment_method=='loan'){
+		$payment_method='ΤΡΑΠΕΖΙΚΗ ΚΑΤΑΘΕΣΗ';
+		}
+		
+		if ($payment_method=='edenred'){
+		$payment_method='ΚΑΡΤΑ';
+		}
 
 		//$customer_invoice_code_prefix='IC';
 		//$customer_code_prefix='AC';
@@ -383,7 +418,7 @@ and code<>''
 
 		if ($alldata['express']) { $comment=$comment.' - EXPRESS'; } 
 		
-		$rowtext= $order_id_prefix.$id.';'.$maincust.";0;0;0;".$hmera.";".$comment.";;".$voucher.";;".$deliverycust.";ΚΑΡΤΑ;COURIER SKROUTZ;".$parastatiko.";";		
+		$rowtext= $order_id_prefix.$id.';'.$maincust.";0;0;0;".$hmera.";".$comment.";;".$voucher.";;".$deliverycust.";".$payment_method.";".$courier_company.";".$parastatiko.";";		
 		$rowtext = str_ireplace("&amp;", "&", $rowtext);
 		$rowtext = str_ireplace("&quot;", "'", $rowtext);
 		$rowtext = str_ireplace("&#039;", "'", $rowtext);
@@ -700,3 +735,4 @@ function get_model($id) {
 
 
 ?>
+
