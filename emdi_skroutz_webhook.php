@@ -321,7 +321,7 @@ $query="
 										`invoice_doy`, `invoice_street_name`, `invoice_street_number`, 
 										`invoice_zip`, `invoice_city`, `invoice_region`, 
 										`invoice_vat_exclusion`
-                                      	,`express`,`gift_wrap`,`fulfilled_by_skroutz`
+                                      	,`express`,`gift_wrap`,`fulfilled_by_skroutz`,`payment_method`
 										) 
 								VALUES ('".$alldata->order->code."', '".$order_state."', '".$alldata->order->customer->id."', '".replace_bad($alldata->order->customer->first_name)."', '".replace_bad($alldata->order->customer->last_name)."', 
 										'".replace_bad($alldata->order->customer->address->street_name)."','".$alldata->order->customer->address->street_number."', '".$alldata->order->customer->address->zip."','".replace_bad($alldata->order->customer->address->city)."', 
@@ -335,11 +335,11 @@ $query="
 										, '".$alldata->order->invoice_details->address->zip."', '".replace_bad($alldata->order->invoice_details->address->city)."', '".replace_bad($alldata->order->invoice_details->address->region)."'
 										, '".$alldata->order->invoice_details->vat_exclusion_requested."'
 										
-                                        ,'".$alldata->order->express."','".$alldata->order->gift_wrap."','".$alldata->order->fulfilled_by_skroutz."'
+                                        ,'".$alldata->order->express."','".$alldata->order->gift_wrap."','".$alldata->order->fulfilled_by_skroutz."','" . $alldata->order->payment_method . "'
                                         )
 		
 		ON DUPLICATE KEY UPDATE `state`='".$order_state."',`courier`='".$alldata->order->courier."', `courier_voucher`='".$alldata->order->courier_voucher."', 
-								`courier_tracking_codes`='".$alldata->order->courier_tracking_codes[0]."',`event_type`='".$event_type."'
+								`courier_tracking_codes`='".$alldata->order->courier_tracking_codes[0]."',`event_type`='".$event_type."',`fulfilled_by_skroutz`='" . $alldata->order->fulfilled_by_skroutz . "',`payment_method`='" . $alldata->order->payment_method . "'
 		
 		";
 
@@ -449,7 +449,7 @@ if ($num_tags>2) {
 										`invoice_doy`, `invoice_street_name`, `invoice_street_number`, 
 										`invoice_zip`, `invoice_city`, `invoice_region`, 
 										`invoice_vat_exclusion`
-                                        ,`express`,`gift_wrap`,`fulfilled_by_skroutz`
+                                        ,`express`,`gift_wrap`,`fulfilled_by_skroutz`,`payment_method`
 										) 
 								VALUES ('".$alldata->order->code."', '".$order_state."', '".$alldata->order->customer->id."', '".replace_bad($alldata->order->customer->first_name)."', '".replace_bad($alldata->order->customer->last_name)."', 
 										'".replace_bad($alldata->order->customer->address->street_name)."','".$alldata->order->customer->address->street_number."', '".$alldata->order->customer->address->zip."','".replace_bad($alldata->order->customer->address->city)."', 
@@ -463,11 +463,11 @@ if ($num_tags>2) {
 										, '".$alldata->order->invoice_details->address->zip."', '".replace_bad($alldata->order->invoice_details->address->city)."', '".replace_bad($alldata->order->invoice_details->address->region)."'
 										, '".$alldata->order->invoice_details->vat_exclusion_requested."'
 										
-                                        ,'".$alldata->order->express."','".$alldata->order->gift_wrap."','".$alldata->order->fulfilled_by_skroutz."'
+                                        ,'".$alldata->order->express."','".$alldata->order->gift_wrap."','".$alldata->order->fulfilled_by_skroutz."','" . $alldata->order->payment_method . "'
                                         )
 		
 		ON DUPLICATE KEY UPDATE `state`='".$order_state."',`courier`='".$alldata->order->courier."', `courier_voucher`='".$alldata->order->courier_voucher."', 
-								`courier_tracking_codes`='".$alldata->order->courier_tracking_codes[0]."',`event_type`='".$event_type."'
+								`courier_tracking_codes`='".$alldata->order->courier_tracking_codes[0]."',`event_type`='".$event_type."',`fulfilled_by_skroutz`='" . $alldata->order->fulfilled_by_skroutz . "', `payment_method`='" . $alldata->order->payment_method . "'
 		
 		";
 	
