@@ -1,148 +1,144 @@
 <?php
 /*------------------------------------------------------------------------
-# EMDI - multishop bridge by SBZ systems - Solon Zenetzis - version 1
+# EMDI - multishop bridge by SBZ systems - Solon Zenetzis - version 2
+# ------------------------------------------------------------------------
+# Aggregates two (or more) shop bridges into one endpoint for EMDI.
+# EMDI Settings → Internet links: point domain/key at THIS script like a normal bridge.
 # ------------------------------------------------------------------------
 # author    SBZ systems - Solon Zenetzis
-# copyright Copyright (C) 2020 sbzsystems.com. All Rights Reserved.
+# copyright Copyright (C) 2020-2026 sbzsystems.com. All Rights Reserved.
 # @license - https://www.gnu.org/licenses/gpl-2.0.html GNU/GPL
 # Websites: https://www.sbzsystems.com
-# Technical Support:  Forum - https://www.sbzsystems.com
 -------------------------------------------------------------------------*/
-header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
+header('Cache-Control: no-cache, must-revalidate');
 header('Content-Type: text/html; charset=UTF-8');
 error_reporting(0);
 
+// --- configure ---
+$passkey = 'CHANGE_ME'; // must match the key=… EMDI sends
 
-$productid=$_REQUEST['productid'];
-$productid=iconv("ISO-8859-7", "UTF-8",  $productid);
-$stock=$_REQUEST['stock'];
-$action=$_REQUEST['action'];       
-$orderid=$_REQUEST['orderid'];     
-$key=$_REQUEST['key'];       
+// Each shop: full bridge URL including its own key= (without action)
+$eshops = array(
+	array(
+		'url' => 'https://eshop1.gr/emdi_wp_woo_bridge.php?company=ike&key=12245325',
+		'order_prefix' => '', // main shop: no order-id prefix
+	),
+	array(
+		'url' => 'https://eshop2.com/emdi_open2_bridge.php?key=235232354235',
+		'order_prefix' => 'EM', // unique prefix; also set in that shop bridge when echoing order ids
+	),
+);
 
-$shipcomp=$_REQUEST['shipcomp'];
-$voucherno=$_REQUEST['voucherno'];
-$docid=$_REQUEST['docid'];
+// --- request ---
+$productid = isset($_REQUEST['productid']) ? $_REQUEST['productid'] : '';
+if ($productid !== '' && function_exists('mb_check_encoding') && !mb_check_encoding($productid, 'UTF-8')) {
+	$productid = @iconv('ISO-8859-7', 'UTF-8//IGNORE', $productid);
+}
+$stock = isset($_REQUEST['stock']) ? $_REQUEST['stock'] : '';
+$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
+$orderid = isset($_REQUEST['orderid']) ? $_REQUEST['orderid'] : '';
+$key = isset($_REQUEST['key']) ? $_REQUEST['key'] : '';
+$shipcomp = isset($_REQUEST['shipcomp']) ? $_REQUEST['shipcomp'] : '';
+$voucherno = isset($_REQUEST['voucherno']) ? $_REQUEST['voucherno'] : '';
+$docid = isset($_REQUEST['docid']) ? $_REQUEST['docid'] : '';
 
-$randomvar='&rndval='.rand(10000000,90000000); //reduce cache issues
-$eshopurl_1='http://eshop1.gr/emdi_wp_woo_bridge.php?company=ike&key=12245325'.$randomvar;
-$eshopurl_2='https://eshop2.com/emdi_open2_bridge.php?key=235232354235'.$randomvar;
-$order_id_prefix_eshop2='EM';
-
-
-if (!($key==$passkey)) { exit; }
-
-
-
-
-if ($action == 'deletetmp') {
-
-	echo file_get_contents("$eshopurl_1&action=deletetmp");	
-	echo file_get_contents("$eshopurl_2&action=deletetmp");	
-	
+if ($key !== $passkey) {
+	exit;
 }
 
-
-if ($action == 'customersok') {
-
-	echo file_get_contents("$eshopurl_1&action=customersok");	
-	echo file_get_contents("$eshopurl_2&action=customersok");	
-
+function emdi_ms_fetch($url)
+{
+	$ctx = stream_context_create(array(
+		'http' => array('timeout' => 60, 'ignore_errors' => true),
+		'ssl' => array('verify_peer' => true, 'verify_peer_name' => true),
+	));
+	$out = @file_get_contents($url, false, $ctx);
+	return ($out === false) ? '' : $out;
 }
 
-
-if ($action == 'productsok') {
-	
-	echo file_get_contents("$eshopurl_1&action=productsok");	
-	echo file_get_contents("$eshopurl_2&action=productsok");	
-
+function emdi_ms_shop_url($base, $query)
+{
+	$sep = (strpos($base, '?') === false) ? '?' : '&';
+	return $base . $sep . 'rndval=' . rand(10000000, 90000000) . '&' . $query;
 }
 
-
-if ($action == 'customers') {
-
-	echo file_get_contents("$eshopurl_1&action=customers");	
-	//Delete 1st row
-	echo preg_replace('/^.+\n/', '', file_get_contents("$eshopurl_2&action=customers"));
-	
+function emdi_ms_strip_header_row($csv)
+{
+	return preg_replace('/^.+(\r\n|\n|\r)/', '', $csv, 1);
 }
 
-
-if ($action == 'products') { 
-
-	echo file_get_contents("$eshopurl_1&action=products");	
-	//Delete 1st row
-	echo preg_replace('/^.+\n/', '', file_get_contents("$eshopurl_2&action=products"));
-	
-}
-
-
-if ($action == 'orders') {
-	
-	echo file_get_contents("$eshopurl_1&action=orders");	
-	//Delete 1st row
-	echo preg_replace('/^.+\n/', '', file_get_contents("$eshopurl_2&action=orders"));
-	
-}
-
-
-if ($action == 'order') {
- 
-	if (mb_stripos($orderid, $order_id_prefix_eshop2) !== false) { 
-		
-		echo file_get_contents("$eshopurl_2&action=order&orderid=$orderid");	
-		
-	} else {
-		
-		echo file_get_contents("$eshopurl_1&action=order&orderid=$orderid");	
-		
+function emdi_ms_find_shop($eshops, $orderid)
+{
+	// Longest matching prefix wins (empty prefix = fallback / main shop)
+	$best = null;
+	$bestLen = -1;
+	foreach ($eshops as $shop) {
+		$p = isset($shop['order_prefix']) ? (string)$shop['order_prefix'] : '';
+		if ($p === '') {
+			if ($best === null) {
+				$best = $shop;
+				$bestLen = 0;
+			}
+			continue;
+		}
+		if (mb_stripos($orderid, $p) === 0 && mb_strlen($p) > $bestLen) {
+			$best = $shop;
+			$bestLen = mb_strlen($p);
+		}
 	}
-		
+	return $best;
 }
 
-
-if ($action == 'confirmorder') {
- 
-	if (mb_stripos($orderid, $order_id_prefix_eshop2) !== false) { 
-
-		echo file_get_contents("$eshopurl_2&action=confirmorder&docid=$docid&shipcomp=$shipcomp&voucherno=$voucherno&orderid=$orderid");	
-		
-	} else {
-		
-		echo file_get_contents("$eshopurl_1&action=confirmorder&docid=$docid&shipcomp=$shipcomp&voucherno=$voucherno&orderid=$orderid");
-		
+function emdi_ms_orderid_for_shop($orderid, $shop)
+{
+	$p = isset($shop['order_prefix']) ? (string)$shop['order_prefix'] : '';
+	if ($p === '') {
+		return $orderid;
 	}
-
-}
-
-
-if ($action == 'updatestock') { 
-
-	echo file_get_contents("$eshopurl_1&action=updatestock&productid=$productid&stock=$stock");	
-	echo file_get_contents("$eshopurl_2&action=updatestock&productid=$productid&stock=$stock");
-	
-}
-
-
-if ($action == 'cancelorder') {
-	
-	if (mb_stripos($orderid, $order_id_prefix_eshop2) !== false) { 
-		
-		echo file_get_contents("$eshopurl_2&action=cancelorder&orderid=$orderid");	
-		
-	} else {
-		
-		echo file_get_contents("$eshopurl_1&action=cancelorder&orderid=$orderid");
-		
+	if (mb_stripos($orderid, $p) === 0) {
+		return mb_substr($orderid, mb_strlen($p));
 	}
-	
-} 
+	return str_ireplace($p, '', $orderid);
+}
 
+if ($action === 'deletetmp' || $action === 'customersok' || $action === 'productsok' || $action === 'updatestock') {
+	foreach ($eshops as $shop) {
+		$q = 'action=' . rawurlencode($action);
+		if ($action === 'updatestock') {
+			$q .= '&productid=' . rawurlencode($productid) . '&stock=' . rawurlencode($stock);
+		}
+		echo emdi_ms_fetch(emdi_ms_shop_url($shop['url'], $q));
+	}
+	exit;
+}
 
+if ($action === 'customers' || $action === 'products' || $action === 'orders') {
+	$first = true;
+	foreach ($eshops as $shop) {
+		$raw = emdi_ms_fetch(emdi_ms_shop_url($shop['url'], 'action=' . rawurlencode($action)));
+		if ($first) {
+			echo $raw;
+			$first = false;
+		} else {
+			echo emdi_ms_strip_header_row($raw);
+		}
+	}
+	exit;
+}
 
-
-
- 
-
-
+if ($action === 'order' || $action === 'confirmorder' || $action === 'cancelorder') {
+	$shop = emdi_ms_find_shop($eshops, $orderid);
+	if ($shop === null) {
+		exit;
+	}
+	$oid = emdi_ms_orderid_for_shop($orderid, $shop);
+	$q = 'action=' . rawurlencode($action) . '&orderid=' . rawurlencode($oid);
+	if ($action === 'confirmorder') {
+		$q .= '&docid=' . rawurlencode($docid)
+			. '&shipcomp=' . rawurlencode($shipcomp)
+			. '&voucherno=' . rawurlencode($voucherno);
+	}
+	echo emdi_ms_fetch(emdi_ms_shop_url($shop['url'], $q));
+	exit;
+}
 ?>
